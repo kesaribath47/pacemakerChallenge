@@ -1,0 +1,2669 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.1//EN' 'http://www.it.uu.se/research/group/darts/uppaal/flat-1_2.dtd'>
+<nta>
+	<declaration>// Place global declarations here.
+
+clock x,y;
+clock clk;
+clock tpa,tpv;
+
+//normal = 0, sleep = 1, exercise = 2;
+int[0,3] md = 0;
+
+int PacemakerRate;
+int HeartRate;
+int displayPacemakerInt=10000;
+int displayHeartInt=10000;
+int beatsHeart=0;
+
+int HeartRateLower[4] = {40,30,100,30};
+int HeartRateUpper[4] = {100,60,175,175};
+
+int TLRI[4]={1500, 2000, 600, 2000};
+int TURI[4]={600, 1000, 343, 343};
+ 
+int TAVI_l=30;
+int TVRP_l=150;
+int TPVARP_l=100;
+
+int TAVI_u=100;
+int TVRP_u=500;
+int TPVARP_u=500;
+
+int PAV_max=100;
+int PAV_min=30;
+int PAV=40;
+
+int beats_1[2]={0,0};
+
+int[0,1000000] time=0;
+
+broadcast chan Vget;
+chan Aget;
+chan keyA,keyV,ex_PVARP;
+broadcast chan VP,AP,AS,VS;
+urgent broadcast chan reset;
+urgent broadcast chan manualShift;
+chan manual,normal,sleep,exercise,auto;
+broadcast chan heart_random, heart_manual, heart_test, heart_keyV, heart_keyA;
+
+chan testing, testOver;</declaration>
+	<template>
+		<name x="5" y="5">PaceA</name>
+		<declaration>// Place local declarations here.
+clock t;</declaration>
+		<location id="id0" x="-34" y="-25">
+			<name x="-44" y="-59">AS_received</name>
+		</location>
+		<location id="id1" x="-255" y="-25">
+			<name x="-265" y="-59">LRI</name>
+			<label kind="invariant" x="-374" y="-8">tpa&lt;=TLRI[md]-TAVI_u</label>
+		</location>
+		<init ref="id1"/>
+		<transition>
+			<source ref="id1"/>
+			<target ref="id1"/>
+			<label kind="guard" x="-314" y="76">tpa&gt;=TLRI[md]-TAVI_u</label>
+			<label kind="synchronisation" x="-263" y="93">AP!</label>
+			<label kind="assignment" x="-263" y="119">tpa:=0</label>
+			<nail x="-280" y="110"/>
+			<nail x="-221" y="110"/>
+		</transition>
+		<transition>
+			<source ref="id1"/>
+			<target ref="id1"/>
+			<label kind="synchronisation" x="-263" y="-195">VP?</label>
+			<label kind="assignment" x="-272" y="-170">tpa:=0</label>
+			<nail x="-280" y="-178"/>
+			<nail x="-229" y="-170"/>
+		</transition>
+		<transition>
+			<source ref="id1"/>
+			<target ref="id1"/>
+			<label kind="synchronisation" x="-391" y="-68">VS?</label>
+			<label kind="assignment" x="-357" y="-68">tpa:=0</label>
+			<nail x="-365" y="-25"/>
+			<nail x="-365" y="-102"/>
+		</transition>
+		<transition>
+			<source ref="id0"/>
+			<target ref="id1"/>
+			<label kind="synchronisation" x="-161" y="8">VS?</label>
+			<label kind="assignment" x="-144" y="34">tpa:=0</label>
+			<nail x="-136" y="34"/>
+		</transition>
+		<transition>
+			<source ref="id0"/>
+			<target ref="id1"/>
+			<label kind="synchronisation" x="-170" y="-42">VP?</label>
+			<label kind="assignment" x="-178" y="-25">tpa:=0</label>
+		</transition>
+		<transition>
+			<source ref="id1"/>
+			<target ref="id0"/>
+			<label kind="synchronisation" x="-153" y="-85">AS?</label>
+			<nail x="-145" y="-68"/>
+		</transition>
+	</template>
+	<template>
+		<name>PaceV</name>
+		<declaration>// Place local declarations here.
+clock t;</declaration>
+		<location id="id2" x="256" y="248">
+			<name x="264" y="256">PAV_2</name>
+		</location>
+		<location id="id3" x="-136" y="-328">
+			<name x="-146" y="-358">PAV_1</name>
+		</location>
+		<location id="id4" x="238" y="-195">
+			<name x="228" y="-229">waitURI</name>
+			<label kind="invariant" x="255" y="-204">clk&lt;=TURI[md]</label>
+		</location>
+		<location id="id5" x="246" y="0">
+			<label kind="invariant" x="272" y="-17">tpv&lt;=TAVI_u</label>
+		</location>
+		<location id="id6" x="0" y="0">
+			<name x="-10" y="-34">PaceVInit</name>
+		</location>
+		<init ref="id6"/>
+		<transition>
+			<source ref="id2"/>
+			<target ref="id6"/>
+			<label kind="synchronisation" x="18" y="179">reset?</label>
+			<label kind="assignment" x="18" y="196">t:=0</label>
+			<nail x="0" y="144"/>
+		</transition>
+		<transition>
+			<source ref="id3"/>
+			<target ref="id6"/>
+			<label kind="synchronisation" x="-118" y="-291">reset?</label>
+			<label kind="assignment" x="-118" y="-274">t:=0</label>
+			<nail x="-8" y="-221"/>
+		</transition>
+		<transition>
+			<source ref="id2"/>
+			<target ref="id6"/>
+			<label kind="guard" x="64" y="264">tpv&gt;=PAV</label>
+			<label kind="synchronisation" x="72" y="224">VP!</label>
+			<label kind="assignment" x="24" y="224">clk:=0</label>
+			<nail x="-72" y="248"/>
+		</transition>
+		<transition>
+			<source ref="id5"/>
+			<target ref="id2"/>
+			<label kind="guard" x="352" y="144">tpv&gt;=TAVI_l&amp;&amp;clk&gt;=TURI[md]</label>
+			<nail x="376" y="104"/>
+		</transition>
+		<transition>
+			<source ref="id3"/>
+			<target ref="id6"/>
+			<label kind="synchronisation" x="-72" y="-192">VS?</label>
+		</transition>
+		<transition>
+			<source ref="id3"/>
+			<target ref="id6"/>
+			<label kind="guard" x="-240" y="-240">tpv&gt;=PAV</label>
+			<label kind="synchronisation" x="-192" y="-200">VP!</label>
+			<label kind="assignment" x="-192" y="-176">clk:=0</label>
+			<nail x="-248" y="-64"/>
+		</transition>
+		<transition>
+			<source ref="id4"/>
+			<target ref="id3"/>
+			<label kind="guard" x="-8" y="-352">clk&gt;=TURI[md]</label>
+			<nail x="368" y="-336"/>
+		</transition>
+		<transition>
+			<source ref="id5"/>
+			<target ref="id6"/>
+			<label kind="synchronisation" x="59" y="-17">reset?</label>
+			<label kind="assignment" x="59" y="0">t:=0</label>
+		</transition>
+		<transition>
+			<source ref="id4"/>
+			<target ref="id6"/>
+			<label kind="synchronisation" x="93" y="-119">reset?</label>
+			<label kind="assignment" x="85" y="-102">t:=0</label>
+		</transition>
+		<transition>
+			<source ref="id5"/>
+			<target ref="id6"/>
+			<label kind="synchronisation" x="104" y="96">VS?</label>
+			<nail x="212" y="127"/>
+			<nail x="51" y="119"/>
+		</transition>
+		<transition>
+			<source ref="id4"/>
+			<target ref="id6"/>
+			<label kind="synchronisation" x="88" y="-264">VS?</label>
+			<nail x="322" y="-313"/>
+			<nail x="80" y="-240"/>
+			<nail x="34" y="-50"/>
+		</transition>
+		<transition>
+			<source ref="id5"/>
+			<target ref="id4"/>
+			<label kind="guard" x="242" y="-131">tpv&gt;=TAVI_l&amp;&amp;clk&lt;TURI[md]</label>
+		</transition>
+		<transition>
+			<source ref="id6"/>
+			<target ref="id5"/>
+			<label kind="synchronisation" x="153" y="25">AP?</label>
+			<label kind="assignment" x="119" y="34">tpv:=0</label>
+			<nail x="119" y="68"/>
+		</transition>
+		<transition>
+			<source ref="id6"/>
+			<target ref="id5"/>
+			<label kind="synchronisation" x="127" y="-68">AS?</label>
+			<label kind="assignment" x="119" y="-42">tpv:=0</label>
+			<nail x="102" y="-59"/>
+		</transition>
+	</template>
+	<template>
+		<name>Sense1</name>
+		<declaration>clock t;</declaration>
+		<location id="id7" x="-374" y="-144">
+			<committed/>
+		</location>
+		<location id="id8" x="-544" y="-128">
+			<label kind="invariant" x="-600" y="-112">t&lt;=TPVARP_u</label>
+		</location>
+		<location id="id9" x="-360" y="-240">
+			<committed/>
+		</location>
+		<location id="id10" x="-552" y="-232">
+		</location>
+		<init ref="id10"/>
+		<transition>
+			<source ref="id7"/>
+			<target ref="id8"/>
+		</transition>
+		<transition>
+			<source ref="id8"/>
+			<target ref="id7"/>
+			<label kind="synchronisation" x="-314" y="-136">ex_PVARP?</label>
+			<nail x="-213" y="-67"/>
+		</transition>
+		<transition>
+			<source ref="id8"/>
+			<target ref="id10"/>
+			<label kind="synchronisation" x="-705" y="-331">reset?</label>
+			<label kind="assignment" x="-705" y="-314">t:=0</label>
+			<nail x="-748" y="-127"/>
+			<nail x="-748" y="-314"/>
+			<nail x="-552" y="-314"/>
+		</transition>
+		<transition>
+			<source ref="id8"/>
+			<target ref="id8"/>
+			<label kind="synchronisation" x="-569" y="-76">Aget?</label>
+			<nail x="-637" y="-51"/>
+			<nail x="-433" y="-59"/>
+		</transition>
+		<transition>
+			<source ref="id9"/>
+			<target ref="id10"/>
+			<label kind="synchronisation" x="-488" y="-320">AS!</label>
+			<nail x="-488" y="-304"/>
+		</transition>
+		<transition>
+			<source ref="id10"/>
+			<target ref="id9"/>
+			<label kind="synchronisation" x="-516" y="-251">Aget?</label>
+		</transition>
+		<transition>
+			<source ref="id10"/>
+			<target ref="id8"/>
+			<label kind="synchronisation" x="-520" y="-200">VS?</label>
+			<label kind="assignment" x="-528" y="-184">t:=0</label>
+			<nail x="-480" y="-192"/>
+		</transition>
+		<transition>
+			<source ref="id10"/>
+			<target ref="id8"/>
+			<label kind="synchronisation" x="-584" y="-200">VP?</label>
+			<label kind="assignment" x="-584" y="-184">t:=0</label>
+		</transition>
+		<transition>
+			<source ref="id8"/>
+			<target ref="id10"/>
+			<label kind="guard" x="-688" y="-229">t&gt;=TPVARP_l</label>
+			<nail x="-656" y="-192"/>
+		</transition>
+	</template>
+	<template>
+		<name>Sense2</name>
+		<declaration>clock t;</declaration>
+		<location id="id11" x="-312" y="24">
+			<label kind="invariant" x="-322" y="39">t&lt;=TVRP_u</label>
+		</location>
+		<location id="id12" x="-632" y="24">
+			<committed/>
+		</location>
+		<location id="id13" x="-472" y="-160">
+		</location>
+		<init ref="id13"/>
+		<transition>
+			<source ref="id11"/>
+			<target ref="id13"/>
+			<label kind="synchronisation" x="-238" y="-127">reset?</label>
+			<label kind="assignment" x="-323" y="-161">t:=0</label>
+			<nail x="-187" y="42"/>
+			<nail x="-195" y="-153"/>
+			<nail x="-195" y="-161"/>
+		</transition>
+		<transition>
+			<source ref="id11"/>
+			<target ref="id11"/>
+			<label kind="synchronisation" x="-347" y="85">Vget?</label>
+			<nail x="-365" y="102"/>
+			<nail x="-187" y="102"/>
+		</transition>
+		<transition>
+			<source ref="id11"/>
+			<target ref="id13"/>
+			<label kind="guard" x="-360" y="-88">t&gt;=TVRP_l</label>
+			<nail x="-232" y="24"/>
+		</transition>
+		<transition>
+			<source ref="id13"/>
+			<target ref="id11"/>
+			<label kind="synchronisation" x="-432" y="-88">VP?</label>
+			<label kind="assignment" x="-424" y="-72">t:=0</label>
+		</transition>
+		<transition>
+			<source ref="id12"/>
+			<target ref="id11"/>
+			<label kind="synchronisation" x="-532" y="9">VS!</label>
+			<label kind="assignment" x="-532" y="24">t:=0,clk:=0</label>
+		</transition>
+		<transition>
+			<source ref="id13"/>
+			<target ref="id12"/>
+			<label kind="synchronisation" x="-612" y="-83">Vget?</label>
+		</transition>
+	</template>
+	<template>
+		<name>Template0</name>
+		<declaration>// Place local declarations here.
+clock t;</declaration>
+		<location id="id14" x="59" y="-204">
+		</location>
+		<location id="id15" x="357" y="161">
+			<name x="347" y="131">wait</name>
+			<label kind="invariant" x="347" y="176">clk&lt;=TURI[md]</label>
+		</location>
+		<location id="id16" x="416" y="344">
+			<name x="416" y="315">AVI</name>
+			<label kind="invariant" x="348" y="357">t&lt;=TAVI_u</label>
+		</location>
+		<location id="id17" x="-212" y="255">
+			<name x="-251" y="228">LRI</name>
+			<label kind="invariant" x="-399" y="246">t&lt;=TLRI[md]-TAVI_u</label>
+		</location>
+		<init ref="id17"/>
+		<transition>
+			<source ref="id14"/>
+			<target ref="id17"/>
+			<label kind="synchronisation" x="-144" y="-25">auto?</label>
+			<label kind="assignment" x="-161" y="-17">t:=0,clk:=0</label>
+			<nail x="-144" y="17"/>
+		</transition>
+		<transition>
+			<source ref="id16"/>
+			<target ref="id14"/>
+			<label kind="synchronisation" x="578" y="-34">manualShift?</label>
+			<nail x="688" y="221"/>
+			<nail x="484" y="-187"/>
+		</transition>
+		<transition>
+			<source ref="id17"/>
+			<target ref="id14"/>
+			<label kind="synchronisation" x="-322" y="47">manualShift?</label>
+			<nail x="-229" y="221"/>
+			<nail x="-340" y="-93"/>
+		</transition>
+		<transition>
+			<source ref="id15"/>
+			<target ref="id17"/>
+			<label kind="synchronisation" x="76" y="-102">VS?</label>
+			<label kind="assignment" x="42" y="-85">t:=0, clk:=0</label>
+			<nail x="357" y="93"/>
+			<nail x="357" y="-85"/>
+			<nail x="-178" y="-85"/>
+		</transition>
+		<transition>
+			<source ref="id15"/>
+			<target ref="id17"/>
+			<label kind="guard" x="-8" y="-17">clk&gt;=TURI[md]</label>
+			<label kind="synchronisation" x="51" y="-34">VP!</label>
+			<label kind="assignment" x="153" y="-34">t:=0,
+clk:=0</label>
+			<nail x="238" y="0"/>
+			<nail x="-76" y="8"/>
+		</transition>
+		<transition>
+			<source ref="id16"/>
+			<target ref="id15"/>
+			<label kind="guard" x="382" y="229">t&gt;=TAVI_l &amp;&amp; clk&lt;TURI[md]</label>
+		</transition>
+		<transition>
+			<source ref="id16"/>
+			<target ref="id17"/>
+			<label kind="guard" x="-17" y="348">t&gt;=TAVI_l and clk&gt;=TURI[md]</label>
+			<label kind="synchronisation" x="-32" y="368">VP!</label>
+			<label kind="assignment" x="42" y="391">t:=0,clk:=0</label>
+			<nail x="32" y="384"/>
+		</transition>
+		<transition>
+			<source ref="id16"/>
+			<target ref="id17"/>
+			<label kind="synchronisation" x="59" y="280">VS?</label>
+			<label kind="assignment" x="119" y="289">t:=0,clk:=0</label>
+		</transition>
+		<transition>
+			<source ref="id17"/>
+			<target ref="id16"/>
+			<label kind="guard" x="-17" y="212">t&gt;=TLRI[md]-TAVI_l</label>
+			<label kind="synchronisation" x="48" y="176">AP!</label>
+			<label kind="assignment" x="25" y="195">t:=0</label>
+			<nail x="64" y="168"/>
+		</transition>
+		<transition>
+			<source ref="id17"/>
+			<target ref="id16"/>
+			<label kind="synchronisation" x="64" y="112">AS?</label>
+			<label kind="assignment" x="40" y="96">t:=0</label>
+			<nail x="80" y="104"/>
+		</transition>
+	</template>
+	<template>
+		<name>Keyboard_Pacemaker</name>
+		<declaration>clock t;
+clock t_m;
+int man = 0, sendA = 1;
+
+
+</declaration>
+		<location id="id18" x="0" y="-42">
+		</location>
+		<init ref="id18"/>
+		<transition>
+			<source ref="id18"/>
+			<target ref="id18"/>
+			<label kind="guard" x="-187" y="-51">t&gt;=10000</label>
+			<label kind="assignment" x="-263" y="-34">displayPacemakerInt:=10000</label>
+			<nail x="-161" y="-59"/>
+			<nail x="-161" y="0"/>
+		</transition>
+		<transition>
+			<source ref="id18"/>
+			<target ref="id18"/>
+			<label kind="guard" x="-25" y="144">man==1 and
+t_m&gt;1000</label>
+			<label kind="synchronisation" x="-8" y="127">keyV!</label>
+			<label kind="assignment" x="-17" y="178">sendA:=1,
+t_m:=0</label>
+			<nail x="-42" y="119"/>
+			<nail x="51" y="119"/>
+		</transition>
+		<transition>
+			<source ref="id18"/>
+			<target ref="id18"/>
+			<label kind="guard" x="-212" y="76">man==1 and
+sendA==1 and
+t_m&gt;500</label>
+			<label kind="synchronisation" x="-178" y="59">keyA!</label>
+			<label kind="assignment" x="-204" y="127">sendA:=0</label>
+			<nail x="-161" y="51"/>
+			<nail x="-93" y="102"/>
+		</transition>
+		<transition>
+			<source ref="id18"/>
+			<target ref="id18"/>
+			<label kind="guard" x="-178" y="-153">t&gt;=10000</label>
+			<label kind="synchronisation" x="-195" y="-93">normal!</label>
+			<label kind="assignment" x="-195" y="-136">t:=0,
+man:=0</label>
+			<nail x="-144" y="-85"/>
+			<nail x="-102" y="-136"/>
+		</transition>
+		<transition>
+			<source ref="id18"/>
+			<target ref="id18"/>
+			<label kind="guard" x="144" y="68">t&gt;=10000</label>
+			<label kind="synchronisation" x="153" y="42">exercise!</label>
+			<label kind="assignment" x="110" y="93">t:=0,
+man:=0</label>
+			<nail x="161" y="42"/>
+			<nail x="110" y="93"/>
+		</transition>
+		<transition>
+			<source ref="id18"/>
+			<target ref="id18"/>
+			<label kind="guard" x="127" y="-170">t&gt;=10000</label>
+			<label kind="synchronisation" x="93" y="-119">sleep!</label>
+			<label kind="assignment" x="144" y="-144">t:=0,
+man:=0</label>
+			<nail x="110" y="-153"/>
+			<nail x="153" y="-85"/>
+		</transition>
+		<transition>
+			<source ref="id18"/>
+			<target ref="id18"/>
+			<label kind="guard" x="-25" y="-161">t&gt;=10000</label>
+			<label kind="synchronisation" x="-17" y="-178">manual!</label>
+			<label kind="assignment" x="-25" y="-144">t:=0,
+t_m:=0,
+man:= 1,
+sendA:= 1</label>
+			<nail x="-42" y="-161"/>
+			<nail x="51" y="-161"/>
+		</transition>
+	</template>
+	<template>
+		<name>Pacemaker_modes</name>
+		<location id="id19" x="-42" y="-153">
+			<committed/>
+		</location>
+		<location id="id20" x="-51" y="-221">
+			<committed/>
+		</location>
+		<location id="id21" x="-110" y="-263">
+			<committed/>
+		</location>
+		<location id="id22" x="153" y="-493">
+			<name x="161" y="-518">V</name>
+			<committed/>
+		</location>
+		<location id="id23" x="-306" y="-476">
+			<name x="-316" y="-510">A</name>
+			<committed/>
+		</location>
+		<location id="id24" x="-68" y="-399">
+			<name x="-78" y="-433">Manual</name>
+		</location>
+		<location id="id25" x="-68" y="-51">
+		</location>
+		<init ref="id25"/>
+		<transition>
+			<source ref="id19"/>
+			<target ref="id20"/>
+			<label kind="synchronisation" x="-46" y="-195">reset!</label>
+			<nail x="-51" y="-204"/>
+		</transition>
+		<transition>
+			<source ref="id25"/>
+			<target ref="id19"/>
+			<label kind="synchronisation" x="-55" y="-119">manual?</label>
+		</transition>
+		<transition>
+			<source ref="id20"/>
+			<target ref="id24"/>
+			<label kind="synchronisation" x="-119" y="-323">manualShift!</label>
+		</transition>
+		<transition>
+			<source ref="id21"/>
+			<target ref="id25"/>
+			<label kind="synchronisation" x="-144" y="-195">reset!</label>
+			<label kind="assignment" x="-144" y="-170">clk:=0</label>
+		</transition>
+		<transition>
+			<source ref="id24"/>
+			<target ref="id24"/>
+			<label kind="synchronisation" x="-110" y="-518">manual?</label>
+			<nail x="-170" y="-527"/>
+			<nail x="17" y="-527"/>
+		</transition>
+		<transition>
+			<source ref="id24"/>
+			<target ref="id21"/>
+			<label kind="synchronisation" x="144" y="-374">sleep?</label>
+			<label kind="assignment" x="153" y="-331">md:=1</label>
+			<nail x="195" y="-348"/>
+		</transition>
+		<transition>
+			<source ref="id24"/>
+			<target ref="id21"/>
+			<label kind="synchronisation" x="-42" y="-374">normal?</label>
+			<label kind="assignment" x="-34" y="-340">md:=0</label>
+			<nail x="17" y="-323"/>
+		</transition>
+		<transition>
+			<source ref="id24"/>
+			<target ref="id21"/>
+			<label kind="synchronisation" x="-212" y="-340">exercise?</label>
+			<label kind="assignment" x="-212" y="-306">md:=2</label>
+			<nail x="-161" y="-314"/>
+		</transition>
+		<transition>
+			<source ref="id22"/>
+			<target ref="id24"/>
+			<label kind="synchronisation" x="34" y="-442">VP!</label>
+			<nail x="59" y="-425"/>
+		</transition>
+		<transition>
+			<source ref="id24"/>
+			<target ref="id22"/>
+			<label kind="synchronisation" x="51" y="-501">keyV?</label>
+			<nail x="42" y="-467"/>
+		</transition>
+		<transition>
+			<source ref="id23"/>
+			<target ref="id24"/>
+			<label kind="synchronisation" x="-221" y="-493">AP!</label>
+			<nail x="-187" y="-467"/>
+		</transition>
+		<transition>
+			<source ref="id24"/>
+			<target ref="id23"/>
+			<label kind="synchronisation" x="-272" y="-425">keyA?</label>
+			<nail x="-212" y="-416"/>
+		</transition>
+		<transition>
+			<source ref="id25"/>
+			<target ref="id25"/>
+			<label kind="synchronisation" x="-314" y="-85">exercise?</label>
+			<label kind="assignment" x="-314" y="-59">md:=2,tpa:=0,tpv:=0,clk:=0</label>
+			<nail x="-237" y="17"/>
+			<nail x="-212" y="-136"/>
+		</transition>
+		<transition>
+			<source ref="id25"/>
+			<target ref="id25"/>
+			<label kind="synchronisation" x="-85" y="136">sleep?</label>
+			<label kind="assignment" x="-85" y="153">md:=1,tpa:=0,tpv:=0,clk:=0</label>
+			<nail x="0" y="127"/>
+			<nail x="-144" y="127"/>
+		</transition>
+		<transition>
+			<source ref="id25"/>
+			<target ref="id25"/>
+			<label kind="synchronisation" x="119" y="-102">normal?</label>
+			<label kind="assignment" x="119" y="-85">md:=0,tpa:=0,tpv:=0,clk:=0</label>
+			<nail x="76" y="-144"/>
+			<nail x="76" y="0"/>
+		</transition>
+	</template>
+	<template>
+		<name>LED_Pacemaker</name>
+		<declaration>clock t;
+</declaration>
+		<location id="id26" x="-51" y="93">
+			<name x="-76" y="102">VSense</name>
+			<label kind="invariant" x="-76" y="119">t&lt;=10</label>
+		</location>
+		<location id="id27" x="-153" y="0">
+			<name x="-221" y="-17">ASense</name>
+			<label kind="invariant" x="-212" y="0">t&lt;=10</label>
+		</location>
+		<location id="id28" x="-51" y="-110">
+			<name x="-61" y="-144">APace</name>
+			<label kind="invariant" x="-34" y="-136">t&lt;=10</label>
+		</location>
+		<location id="id29" x="59" y="-8">
+			<name x="49" y="-42">VPace</name>
+			<label kind="invariant" x="51" y="8">t&lt;=10</label>
+		</location>
+		<location id="id30" x="-51" y="-8">
+		</location>
+		<init ref="id30"/>
+		<transition>
+			<source ref="id26"/>
+			<target ref="id30"/>
+			<nail x="-34" y="42"/>
+		</transition>
+		<transition>
+			<source ref="id30"/>
+			<target ref="id26"/>
+			<label kind="synchronisation" x="-102" y="51">VS?</label>
+			<label kind="assignment" x="-110" y="68">t:=0</label>
+			<nail x="-76" y="51"/>
+		</transition>
+		<transition>
+			<source ref="id27"/>
+			<target ref="id30"/>
+			<nail x="-102" y="17"/>
+		</transition>
+		<transition>
+			<source ref="id30"/>
+			<target ref="id27"/>
+			<label kind="synchronisation" x="-127" y="-42">AS?</label>
+			<label kind="assignment" x="-127" y="-25">t:=0</label>
+			<nail x="-119" y="-25"/>
+		</transition>
+		<transition>
+			<source ref="id28"/>
+			<target ref="id30"/>
+			<nail x="-34" y="-59"/>
+		</transition>
+		<transition>
+			<source ref="id30"/>
+			<target ref="id28"/>
+			<label kind="synchronisation" x="-102" y="-76">AP?</label>
+			<label kind="assignment" x="-102" y="-93">t:=0</label>
+			<nail x="-76" y="-59"/>
+		</transition>
+		<transition>
+			<source ref="id29"/>
+			<target ref="id30"/>
+			<nail x="8" y="25"/>
+		</transition>
+		<transition>
+			<source ref="id30"/>
+			<target ref="id29"/>
+			<label kind="synchronisation" x="-8" y="-34">VP?</label>
+			<label kind="assignment" x="0" y="-59">t:=0</label>
+			<nail x="0" y="-42"/>
+		</transition>
+	</template>
+	<template>
+		<name>LED_Heart</name>
+		<declaration>clock t;
+</declaration>
+		<location id="id31" x="-51" y="93">
+			<name x="-76" y="102">VGet</name>
+			<label kind="invariant" x="-76" y="119">t&lt;=10</label>
+		</location>
+		<location id="id32" x="-153" y="0">
+			<name x="-221" y="-17">AGet</name>
+			<label kind="invariant" x="-212" y="0">t&lt;=10</label>
+		</location>
+		<location id="id33" x="-51" y="-110">
+			<name x="-61" y="-144">APace</name>
+			<label kind="invariant" x="-34" y="-136">t&lt;=10</label>
+		</location>
+		<location id="id34" x="59" y="-8">
+			<name x="49" y="-42">VPace</name>
+			<label kind="invariant" x="51" y="8">t&lt;=10</label>
+		</location>
+		<location id="id35" x="-51" y="-8">
+		</location>
+		<init ref="id35"/>
+		<transition>
+			<source ref="id31"/>
+			<target ref="id35"/>
+			<nail x="-34" y="42"/>
+		</transition>
+		<transition>
+			<source ref="id35"/>
+			<target ref="id31"/>
+			<label kind="synchronisation" x="-102" y="51">Vget?</label>
+			<label kind="assignment" x="-110" y="68">t:=0</label>
+			<nail x="-76" y="51"/>
+		</transition>
+		<transition>
+			<source ref="id32"/>
+			<target ref="id35"/>
+			<nail x="-102" y="17"/>
+		</transition>
+		<transition>
+			<source ref="id35"/>
+			<target ref="id32"/>
+			<label kind="synchronisation" x="-127" y="-42">Aget?</label>
+			<label kind="assignment" x="-127" y="-25">t:=0</label>
+			<nail x="-119" y="-25"/>
+		</transition>
+		<transition>
+			<source ref="id33"/>
+			<target ref="id35"/>
+			<nail x="-34" y="-59"/>
+		</transition>
+		<transition>
+			<source ref="id35"/>
+			<target ref="id33"/>
+			<label kind="synchronisation" x="-102" y="-76">AP?</label>
+			<label kind="assignment" x="-102" y="-93">t:=0</label>
+			<nail x="-76" y="-59"/>
+		</transition>
+		<transition>
+			<source ref="id34"/>
+			<target ref="id35"/>
+			<nail x="8" y="25"/>
+		</transition>
+		<transition>
+			<source ref="id35"/>
+			<target ref="id34"/>
+			<label kind="synchronisation" x="-8" y="-34">VP?</label>
+			<label kind="assignment" x="0" y="-59">t:=0</label>
+			<nail x="0" y="-42"/>
+		</transition>
+	</template>
+	<template>
+		<name>Heart_Old</name>
+		<declaration>
+int[0,32000] minwait_V=200,minwait_A=100;</declaration>
+		<location id="id36" x="416" y="229">
+			<committed/>
+		</location>
+		<location id="id37" x="331" y="-8">
+			<committed/>
+		</location>
+		<location id="id38" x="59" y="280">
+			<name x="49" y="250">Test</name>
+		</location>
+		<location id="id39" x="255" y="127">
+			<name x="245" y="97">Manual</name>
+		</location>
+		<location id="id40" x="0" y="0">
+			<name x="-10" y="-30">Random</name>
+			<label kind="invariant" x="32" y="-16">x&lt;=2000</label>
+		</location>
+		<init ref="id40"/>
+		<transition>
+			<source ref="id40"/>
+			<target ref="id40"/>
+			<label kind="synchronisation" x="119" y="-110">heart_random?</label>
+			<label kind="assignment" x="85" y="-102">x:=0</label>
+			<nail x="187" y="-59"/>
+			<nail x="59" y="-136"/>
+		</transition>
+		<transition>
+			<source ref="id38"/>
+			<target ref="id39"/>
+			<label kind="synchronisation" x="136" y="272">heart_manual?</label>
+			<nail x="208" y="256"/>
+		</transition>
+		<transition>
+			<source ref="id40"/>
+			<target ref="id38"/>
+			<label kind="synchronisation" x="-68" y="119">heart_test?</label>
+			<nail x="-40" y="176"/>
+		</transition>
+		<transition>
+			<source ref="id39"/>
+			<target ref="id40"/>
+			<label kind="synchronisation" x="76" y="102">heart_random?</label>
+			<nail x="96" y="128"/>
+		</transition>
+		<transition>
+			<source ref="id39"/>
+			<target ref="id38"/>
+			<label kind="synchronisation" x="93" y="221">heart_test?</label>
+		</transition>
+		<transition>
+			<source ref="id38"/>
+			<target ref="id38"/>
+			<label kind="guard" x="-181" y="240">x&gt;=minwait_V</label>
+			<label kind="synchronisation" x="-157" y="288">Vget!</label>
+			<label kind="assignment" x="-117" y="328">x:=0</label>
+			<nail x="-53" y="376"/>
+			<nail x="-101" y="224"/>
+		</transition>
+		<transition>
+			<source ref="id38"/>
+			<target ref="id38"/>
+			<label kind="guard" x="139" y="366">x&gt;=minwait_A</label>
+			<label kind="synchronisation" x="99" y="384">Aget!</label>
+			<label kind="assignment" x="51" y="392">x:=0</label>
+			<nail x="195" y="360"/>
+			<nail x="27" y="376"/>
+		</transition>
+		<transition>
+			<source ref="id36"/>
+			<target ref="id39"/>
+			<label kind="synchronisation" x="312" y="216">Aget!</label>
+			<nail x="296" y="248"/>
+		</transition>
+		<transition>
+			<source ref="id39"/>
+			<target ref="id36"/>
+			<label kind="synchronisation" x="320" y="144">heart_keyA?</label>
+		</transition>
+		<transition>
+			<source ref="id37"/>
+			<target ref="id39"/>
+			<label kind="synchronisation" x="331" y="51">Vget!</label>
+			<nail x="328" y="96"/>
+		</transition>
+		<transition>
+			<source ref="id39"/>
+			<target ref="id37"/>
+			<label kind="synchronisation" x="229" y="25">heart_keyV?</label>
+		</transition>
+		<transition>
+			<source ref="id38"/>
+			<target ref="id40"/>
+			<label kind="synchronisation" x="0" y="153">heart_random?</label>
+		</transition>
+		<transition>
+			<source ref="id40"/>
+			<target ref="id39"/>
+			<label kind="synchronisation" x="85" y="25">heart_manual?</label>
+		</transition>
+		<transition>
+			<source ref="id40"/>
+			<target ref="id40"/>
+			<label kind="guard" x="-230" y="-151">x&gt;=minwait_A</label>
+			<label kind="synchronisation" x="-150" y="-119">Aget!</label>
+			<label kind="assignment" x="-214" y="-119">x:=0</label>
+			<nail x="-238" y="-127"/>
+			<nail x="-70" y="-127"/>
+		</transition>
+		<transition>
+			<source ref="id40"/>
+			<target ref="id40"/>
+			<label kind="guard" x="-264" y="24">x&gt;=minwait_V</label>
+			<label kind="synchronisation" x="-224" y="48">Vget!</label>
+			<label kind="assignment" x="-224" y="64">x:=0</label>
+			<nail x="-160" y="104"/>
+			<nail x="-152" y="-24"/>
+		</transition>
+	</template>
+	<template>
+		<name>Monitor_LRI</name>
+		<declaration>clock t,t1;
+int beats=0;</declaration>
+		<location id="id41" x="-323" y="-136">
+			<name x="-306" y="-144">Display</name>
+			<committed/>
+		</location>
+		<location id="id42" x="-323" y="-246">
+			<name x="-333" y="-276">three</name>
+			<committed/>
+		</location>
+		<location id="id43" x="-496" y="-248">
+			<name x="-506" y="-278">two</name>
+		</location>
+		<location id="id44" x="-600" y="-248">
+			<name x="-610" y="-278">one</name>
+		</location>
+		<init ref="id44"/>
+		<transition>
+			<source ref="id41"/>
+			<target ref="id43"/>
+			<label kind="assignment" x="-493" y="-136">PacemakerRate = beats,
+t1:=0,
+beats:=0,
+t=0</label>
+			<nail x="-493" y="-136"/>
+		</transition>
+		<transition>
+			<source ref="id42"/>
+			<target ref="id41"/>
+			<label kind="guard" x="-314" y="-212">t1&gt;=displayPacemakerInt</label>
+		</transition>
+		<transition>
+			<source ref="id42"/>
+			<target ref="id43"/>
+			<label kind="guard" x="-484" y="-357">t1&lt;displayPacemakerInt</label>
+			<label kind="assignment" x="-425" y="-382">t:=0</label>
+			<nail x="-323" y="-357"/>
+			<nail x="-493" y="-357"/>
+		</transition>
+		<transition>
+			<source ref="id43"/>
+			<target ref="id42"/>
+			<label kind="synchronisation" x="-425" y="-221">VP?</label>
+			<nail x="-408" y="-221"/>
+		</transition>
+		<transition>
+			<source ref="id43"/>
+			<target ref="id42"/>
+			<label kind="synchronisation" x="-425" y="-306">VS?</label>
+			<nail x="-408" y="-289"/>
+		</transition>
+		<transition>
+			<source ref="id44"/>
+			<target ref="id43"/>
+			<label kind="synchronisation" x="-568" y="-192">VP?</label>
+			<label kind="assignment" x="-568" y="-208">t:=0</label>
+			<nail x="-552" y="-208"/>
+		</transition>
+		<transition>
+			<source ref="id44"/>
+			<target ref="id43"/>
+			<label kind="synchronisation" x="-560" y="-312">VS?</label>
+			<label kind="assignment" x="-560" y="-328">t:=0</label>
+			<nail x="-552" y="-288"/>
+		</transition>
+	</template>
+	<template>
+		<name>Monitor_URI</name>
+		<declaration>clock t;</declaration>
+		<location id="id45" x="-467" y="-561">
+			<name x="-477" y="-591">three</name>
+			<committed/>
+		</location>
+		<location id="id46" x="-603" y="-561">
+			<name x="-613" y="-591">two</name>
+		</location>
+		<location id="id47" x="-715" y="-553">
+			<name x="-725" y="-583">one</name>
+		</location>
+		<init ref="id47"/>
+		<transition>
+			<source ref="id45"/>
+			<target ref="id46"/>
+			<label kind="assignment" x="-555" y="-505">t:=0</label>
+			<nail x="-547" y="-505"/>
+		</transition>
+		<transition>
+			<source ref="id46"/>
+			<target ref="id45"/>
+			<label kind="synchronisation" x="-555" y="-585">VP?</label>
+		</transition>
+		<transition>
+			<source ref="id47"/>
+			<target ref="id46"/>
+			<label kind="synchronisation" x="-667" y="-513">VS?</label>
+			<label kind="assignment" x="-667" y="-497">t:=0</label>
+			<nail x="-651" y="-513"/>
+		</transition>
+		<transition>
+			<source ref="id47"/>
+			<target ref="id46"/>
+			<label kind="synchronisation" x="-683" y="-617">VP?</label>
+			<label kind="assignment" x="-683" y="-633">t:=0</label>
+			<nail x="-667" y="-601"/>
+		</transition>
+	</template>
+	<template>
+		<name>Monitor_VRP</name>
+		<declaration>clock t;</declaration>
+		<location id="id48" x="-68" y="-68">
+			<name x="-78" y="-102">three</name>
+			<committed/>
+		</location>
+		<location id="id49" x="-170" y="-68">
+			<name x="-180" y="-102">two</name>
+		</location>
+		<location id="id50" x="-272" y="-68">
+			<name x="-282" y="-102">one</name>
+		</location>
+		<init ref="id50"/>
+		<transition>
+			<source ref="id48"/>
+			<target ref="id50"/>
+			<nail x="-64" y="0"/>
+			<nail x="-272" y="0"/>
+		</transition>
+		<transition>
+			<source ref="id49"/>
+			<target ref="id48"/>
+			<label kind="synchronisation" x="-127" y="-59">VS?</label>
+			<nail x="-110" y="-25"/>
+		</transition>
+		<transition>
+			<source ref="id50"/>
+			<target ref="id49"/>
+			<label kind="synchronisation" x="-229" y="-59">VS?</label>
+			<label kind="assignment" x="-238" y="-34">t:=0</label>
+			<nail x="-221" y="-25"/>
+		</transition>
+		<transition>
+			<source ref="id49"/>
+			<target ref="id48"/>
+			<label kind="synchronisation" x="-127" y="-127">VP?</label>
+			<nail x="-119" y="-110"/>
+		</transition>
+		<transition>
+			<source ref="id50"/>
+			<target ref="id49"/>
+			<label kind="synchronisation" x="-229" y="-136">VP?</label>
+			<label kind="assignment" x="-229" y="-153">t:=0</label>
+			<nail x="-221" y="-119"/>
+		</transition>
+	</template>
+	<template>
+		<name>Monitor_AVI</name>
+		<declaration>clock t;</declaration>
+		<location id="id51" x="-68" y="-68">
+			<name x="-78" y="-102">three</name>
+			<committed/>
+		</location>
+		<location id="id52" x="-272" y="-68">
+			<name x="-282" y="-102">one</name>
+		</location>
+		<location id="id53" x="-170" y="-68">
+			<name x="-180" y="-102">two</name>
+		</location>
+		<init ref="id52"/>
+		<transition>
+			<source ref="id51"/>
+			<target ref="id52"/>
+			<nail x="-64" y="0"/>
+			<nail x="-272" y="0"/>
+		</transition>
+		<transition>
+			<source ref="id53"/>
+			<target ref="id51"/>
+			<label kind="synchronisation" x="-127" y="-59">VS?</label>
+			<nail x="-110" y="-25"/>
+		</transition>
+		<transition>
+			<source ref="id52"/>
+			<target ref="id53"/>
+			<label kind="synchronisation" x="-229" y="-59">AS?</label>
+			<label kind="assignment" x="-224" y="-32">t:=0</label>
+			<nail x="-221" y="-25"/>
+		</transition>
+		<transition>
+			<source ref="id53"/>
+			<target ref="id51"/>
+			<label kind="synchronisation" x="-127" y="-127">VP?</label>
+			<nail x="-119" y="-110"/>
+		</transition>
+		<transition>
+			<source ref="id52"/>
+			<target ref="id53"/>
+			<label kind="synchronisation" x="-229" y="-136">AP?</label>
+			<label kind="assignment" x="-229" y="-153">t:=0</label>
+			<nail x="-221" y="-119"/>
+		</transition>
+	</template>
+	<template>
+		<name>Monitor_PVARP</name>
+		<declaration>clock t;</declaration>
+		<location id="id54" x="-296" y="-120">
+			<name x="-306" y="-150">three</name>
+			<committed/>
+		</location>
+		<location id="id55" x="-416" y="-120">
+			<name x="-426" y="-150">two</name>
+		</location>
+		<location id="id56" x="-520" y="-120">
+			<name x="-530" y="-150">one</name>
+		</location>
+		<init ref="id56"/>
+		<transition>
+			<source ref="id54"/>
+			<target ref="id56"/>
+			<label kind="assignment" x="-424" y="-16">t:=0</label>
+			<nail x="-296" y="-16"/>
+			<nail x="-520" y="-16"/>
+		</transition>
+		<transition>
+			<source ref="id55"/>
+			<target ref="id54"/>
+			<label kind="synchronisation" x="-368" y="-72">AS?</label>
+			<nail x="-352" y="-72"/>
+		</transition>
+		<transition>
+			<source ref="id55"/>
+			<target ref="id54"/>
+			<label kind="synchronisation" x="-376" y="-184">AP?</label>
+			<nail x="-360" y="-168"/>
+		</transition>
+		<transition>
+			<source ref="id56"/>
+			<target ref="id55"/>
+			<label kind="synchronisation" x="-480" y="-72">VS?</label>
+			<label kind="assignment" x="-480" y="-56">t:=0</label>
+			<nail x="-464" y="-72"/>
+		</transition>
+		<transition>
+			<source ref="id56"/>
+			<target ref="id55"/>
+			<label kind="synchronisation" x="-480" y="-184">VP?</label>
+			<label kind="assignment" x="-480" y="-208">t:=0</label>
+			<nail x="-472" y="-168"/>
+		</transition>
+	</template>
+	<template>
+		<name>Keyboard_heart</name>
+		<declaration>clock t,t_m;
+
+int[0,1] man=0,g=0;</declaration>
+		<location id="id57" x="-8" y="0">
+		</location>
+		<init ref="id57"/>
+		<transition>
+			<source ref="id57"/>
+			<target ref="id57"/>
+			<label kind="guard" x="127" y="153">t&gt;=10000</label>
+			<label kind="synchronisation" x="127" y="178">heart_test!</label>
+			<label kind="assignment" x="110" y="195">t:=0,man:=0,t_m:=0</label>
+			<nail x="195" y="93"/>
+			<nail x="93" y="170"/>
+		</transition>
+		<transition>
+			<source ref="id57"/>
+			<target ref="id57"/>
+			<label kind="guard" x="-76" y="153">t&gt;=10000</label>
+			<label kind="assignment" x="-110" y="170">displayHeartInt:=10000</label>
+			<nail x="-110" y="144"/>
+			<nail x="0" y="153"/>
+		</transition>
+		<transition>
+			<source ref="id57"/>
+			<target ref="id57"/>
+			<label kind="guard" x="-416" y="-96">t_m&gt;=1000 and man==1</label>
+			<label kind="synchronisation" x="-368" y="-64">heart_keyV!</label>
+			<label kind="assignment" x="-365" y="-42">t_m:=0,g:=0</label>
+			<nail x="-248" y="16"/>
+			<nail x="-248" y="-80"/>
+		</transition>
+		<transition>
+			<source ref="id57"/>
+			<target ref="id57"/>
+			<label kind="guard" x="-384" y="88">t_m&gt;=500 and man==1 and g==0</label>
+			<label kind="synchronisation" x="-296" y="112">heart_keyA!</label>
+			<label kind="assignment" x="-280" y="136">g:=1</label>
+			<nail x="-208" y="160"/>
+			<nail x="-224" y="48"/>
+		</transition>
+		<transition>
+			<source ref="id57"/>
+			<target ref="id57"/>
+			<label kind="guard" x="152" y="-40">t&gt;=10000</label>
+			<label kind="synchronisation" x="144" y="16">heart_manual!</label>
+			<label kind="assignment" x="144" y="32">t:=0,man:=1,t_m=0,g:=0</label>
+			<nail x="136" y="-51"/>
+			<nail x="136" y="42"/>
+		</transition>
+		<transition>
+			<source ref="id57"/>
+			<target ref="id57"/>
+			<label kind="guard" x="-56" y="-160">t&gt;=10000</label>
+			<label kind="synchronisation" x="-64" y="-136">heart_random!</label>
+			<label kind="assignment" x="-84" y="-110">t:=0,man:=0,t_m:=0</label>
+			<nail x="-120" y="-144"/>
+			<nail x="88" y="-144"/>
+		</transition>
+	</template>
+	<template>
+		<name x="5" y="5">Heart1</name>
+		<declaration>// Place local declarations here.
+int[0,32000] minwait_V=200, minwait_A=100;</declaration>
+		<location id="id58" x="-510" y="-51">
+		</location>
+		<location id="id59" x="-296" y="-48">
+			<name x="-306" y="-82">TestMode</name>
+			<committed/>
+		</location>
+		<location id="id60" x="272" y="72">
+			<name x="289" y="59">V</name>
+			<committed/>
+		</location>
+		<location id="id61" x="400" y="-40">
+			<name x="408" y="-68">A</name>
+			<committed/>
+		</location>
+		<location id="id62" x="264" y="-40">
+			<name x="254" y="-74">ManualMode</name>
+		</location>
+		<location id="id63" x="16" y="72">
+			<committed/>
+		</location>
+		<location id="id64" x="-192" y="-40">
+			<committed/>
+		</location>
+		<location id="id65" x="16" y="-40">
+			<name x="6" y="-74">RandomMode</name>
+		</location>
+		<init ref="id65"/>
+		<transition>
+			<source ref="id58"/>
+			<target ref="id59"/>
+			<label kind="synchronisation" x="-492" y="0">testOver?</label>
+			<nail x="-510" y="-25"/>
+			<nail x="-391" y="59"/>
+		</transition>
+		<transition>
+			<source ref="id59"/>
+			<target ref="id58"/>
+			<label kind="synchronisation" x="-476" y="-144">testing!</label>
+			<nail x="-391" y="-161"/>
+			<nail x="-510" y="-76"/>
+		</transition>
+		<transition>
+			<source ref="id62"/>
+			<target ref="id59"/>
+			<label kind="synchronisation" x="-59" y="144">heart_test?</label>
+			<nail x="425" y="161"/>
+			<nail x="-382" y="161"/>
+		</transition>
+		<transition>
+			<source ref="id59"/>
+			<target ref="id62"/>
+			<label kind="synchronisation" x="-245" y="-246">heart_manual?</label>
+			<nail x="-306" y="-59"/>
+			<nail x="-263" y="-229"/>
+			<nail x="76" y="-229"/>
+		</transition>
+		<transition>
+			<source ref="id59"/>
+			<target ref="id59"/>
+			<label kind="synchronisation" x="-456" y="-72">heart_test?</label>
+			<nail x="-368" y="-104"/>
+			<nail x="-368" y="-16"/>
+		</transition>
+		<transition>
+			<source ref="id59"/>
+			<target ref="id65"/>
+			<label kind="synchronisation" x="-352" y="112">heart_random?</label>
+			<nail x="-296" y="112"/>
+		</transition>
+		<transition>
+			<source ref="id65"/>
+			<target ref="id59"/>
+			<label kind="synchronisation" x="-232" y="-144">heart_test?</label>
+			<nail x="-56" y="-112"/>
+			<nail x="-296" y="-112"/>
+		</transition>
+		<transition>
+			<source ref="id62"/>
+			<target ref="id65"/>
+			<label kind="synchronisation" x="72" y="-8">heart_random?</label>
+			<nail x="160" y="-8"/>
+			<nail x="64" y="-8"/>
+		</transition>
+		<transition>
+			<source ref="id60"/>
+			<target ref="id62"/>
+			<label kind="synchronisation" x="192" y="0">Vget!</label>
+			<label kind="assignment" x="208" y="16">x:=0</label>
+			<nail x="200" y="72"/>
+		</transition>
+		<transition>
+			<source ref="id62"/>
+			<target ref="id60"/>
+			<label kind="synchronisation" x="272" y="8">heart_keyV?</label>
+		</transition>
+		<transition>
+			<source ref="id61"/>
+			<target ref="id62"/>
+			<label kind="synchronisation" x="408" y="-16">Aget!</label>
+			<label kind="assignment" x="408" y="0">x:=0</label>
+			<nail x="400" y="16"/>
+		</transition>
+		<transition>
+			<source ref="id62"/>
+			<target ref="id61"/>
+			<label kind="synchronisation" x="304" y="-64">heart_keyA?</label>
+		</transition>
+		<transition>
+			<source ref="id62"/>
+			<target ref="id62"/>
+			<label kind="synchronisation" x="184" y="-160">heart_manual?</label>
+			<nail x="200" y="-128"/>
+			<nail x="264" y="-128"/>
+		</transition>
+		<transition>
+			<source ref="id65"/>
+			<target ref="id62"/>
+			<label kind="synchronisation" x="80" y="-64">heart_manual?</label>
+		</transition>
+		<transition>
+			<source ref="id63"/>
+			<target ref="id65"/>
+			<nail x="96" y="72"/>
+		</transition>
+		<transition>
+			<source ref="id65"/>
+			<target ref="id63"/>
+			<label kind="guard" x="-80" y="32">x&gt;=minwait_V</label>
+			<label kind="synchronisation" x="-44" y="1">Vget!</label>
+			<label kind="assignment" x="-44" y="16">x:=0</label>
+		</transition>
+		<transition>
+			<source ref="id64"/>
+			<target ref="id65"/>
+			<nail x="-192" y="40"/>
+		</transition>
+		<transition>
+			<source ref="id65"/>
+			<target ref="id64"/>
+			<label kind="guard" x="-164" y="-74">x&gt;=minwait_A</label>
+			<label kind="synchronisation" x="-148" y="-55">Aget!</label>
+			<label kind="assignment" x="-148" y="-40">x:=0</label>
+		</transition>
+		<transition>
+			<source ref="id65"/>
+			<target ref="id65"/>
+			<label kind="synchronisation" x="0" y="-168">heart_random?</label>
+			<label kind="assignment" x="32" y="-144">x:=0</label>
+			<nail x="8" y="-120"/>
+			<nail x="80" y="-120"/>
+		</transition>
+	</template>
+	<template>
+		<name>Heart_pace</name>
+		<location id="id66" x="-80" y="72">
+			<committed/>
+		</location>
+		<location id="id67" x="-352" y="-240">
+			<committed/>
+		</location>
+		<location id="id68" x="-208" y="-72">
+		</location>
+		<init ref="id68"/>
+		<transition>
+			<source ref="id66"/>
+			<target ref="id68"/>
+			<label kind="synchronisation" x="-160" y="-40">Vget!</label>
+			<label kind="assignment" x="-136" y="-8">x:=0</label>
+		</transition>
+		<transition>
+			<source ref="id68"/>
+			<target ref="id66"/>
+			<label kind="synchronisation" x="-216" y="8">VP?</label>
+			<nail x="-160" y="112"/>
+		</transition>
+		<transition>
+			<source ref="id67"/>
+			<target ref="id68"/>
+			<label kind="synchronisation" x="-340" y="-171">Aget!</label>
+			<label kind="assignment" x="-340" y="-156">x:=0</label>
+		</transition>
+		<transition>
+			<source ref="id68"/>
+			<target ref="id67"/>
+			<label kind="synchronisation" x="-224" y="-216">AP?</label>
+			<nail x="-256" y="-264"/>
+		</transition>
+	</template>
+	<template>
+		<name>HMonitor_LRI</name>
+		<declaration>clock t;</declaration>
+		<location id="id69" x="-736" y="-656">
+			<name x="-746" y="-690">LRI</name>
+			<committed/>
+		</location>
+		<location id="id70" x="-920" y="-656">
+			<committed/>
+		</location>
+		<location id="id71" x="-1032" y="-656">
+		</location>
+		<location id="id72" x="-1440" y="-656">
+			<name x="-1462" y="-697">Test1</name>
+			<committed/>
+		</location>
+		<location id="id73" x="-1544" y="-656">
+		</location>
+		<location id="id74" x="-1640" y="-656">
+		</location>
+		<init ref="id74"/>
+		<transition>
+			<source ref="id70"/>
+			<target ref="id69"/>
+			<label kind="guard" x="-909" y="-748">t&gt;TLRI[md]-TAVI_u</label>
+			<nail x="-918" y="-722"/>
+			<nail x="-799" y="-722"/>
+		</transition>
+		<transition>
+			<source ref="id70"/>
+			<target ref="id69"/>
+			<label kind="guard" x="-909" y="-654">t&lt;=TLRI[md]-TAVI_u</label>
+		</transition>
+		<transition>
+			<source ref="id72"/>
+			<target ref="id71"/>
+			<label kind="synchronisation" x="-1300" y="-671">Vget!</label>
+			<label kind="assignment" x="-1334" y="-654">t:=0</label>
+		</transition>
+		<transition>
+			<source ref="id69"/>
+			<target ref="id74"/>
+			<label kind="synchronisation" x="-1513" y="-527">testOver!</label>
+			<nail x="-736" y="-512"/>
+			<nail x="-1640" y="-512"/>
+		</transition>
+		<transition>
+			<source ref="id71"/>
+			<target ref="id70"/>
+			<label kind="synchronisation" x="-1000" y="-680">AP?</label>
+		</transition>
+		<transition>
+			<source ref="id73"/>
+			<target ref="id72"/>
+			<label kind="synchronisation" x="-1528" y="-680">reset!</label>
+		</transition>
+		<transition>
+			<source ref="id74"/>
+			<target ref="id73"/>
+			<label kind="synchronisation" x="-1632" y="-680">testing?</label>
+		</transition>
+	</template>
+	<template>
+		<name>HMonitor_URI</name>
+		<declaration>clock t;</declaration>
+		<location id="id75" x="-936" y="-528">
+			<name x="-946" y="-558">URI</name>
+			<committed/>
+		</location>
+		<location id="id76" x="-1016" y="-528">
+		</location>
+		<location id="id77" x="-1128" y="-528">
+			<committed/>
+		</location>
+		<location id="id78" x="-1232" y="-528">
+		</location>
+		<location id="id79" x="-1336" y="-528">
+			<committed/>
+		</location>
+		<location id="id80" x="-1448" y="-528">
+		</location>
+		<location id="id81" x="-1568" y="-528">
+		</location>
+		<init ref="id81"/>
+		<transition>
+			<source ref="id78"/>
+			<target ref="id77"/>
+			<label kind="synchronisation" x="-1206" y="-586">VP?</label>
+			<nail x="-1224" y="-569"/>
+			<nail x="-1156" y="-569"/>
+		</transition>
+		<transition>
+			<source ref="id75"/>
+			<target ref="id81"/>
+			<label kind="synchronisation" x="-1550" y="-457">testOver!</label>
+			<nail x="-936" y="-440"/>
+			<nail x="-1568" y="-440"/>
+		</transition>
+		<transition>
+			<source ref="id76"/>
+			<target ref="id75"/>
+			<label kind="synchronisation" x="-998" y="-545">VP?</label>
+		</transition>
+		<transition>
+			<source ref="id77"/>
+			<target ref="id76"/>
+			<label kind="synchronisation" x="-1110" y="-545">Aget!</label>
+		</transition>
+		<transition>
+			<source ref="id78"/>
+			<target ref="id77"/>
+			<label kind="synchronisation" x="-1214" y="-545">VS?</label>
+		</transition>
+		<transition>
+			<source ref="id79"/>
+			<target ref="id78"/>
+			<label kind="synchronisation" x="-1312" y="-568">Vget!</label>
+			<label kind="assignment" x="-1312" y="-544">t:=0</label>
+		</transition>
+		<transition>
+			<source ref="id80"/>
+			<target ref="id79"/>
+			<label kind="synchronisation" x="-1424" y="-560">reset!</label>
+		</transition>
+		<transition>
+			<source ref="id81"/>
+			<target ref="id80"/>
+			<label kind="synchronisation" x="-1552" y="-552">testing?</label>
+		</transition>
+	</template>
+	<template>
+		<name>HMonitor_VRP</name>
+		<declaration>clock t;</declaration>
+		<location id="id82" x="-561" y="-416">
+		</location>
+		<location id="id83" x="-671" y="-416">
+			<committed/>
+		</location>
+		<location id="id84" x="-765" y="-416">
+		</location>
+		<location id="id85" x="-858" y="-416">
+			<committed/>
+		</location>
+		<location id="id86" x="-424" y="-416">
+			<name x="-434" y="-450">VRP</name>
+			<committed/>
+		</location>
+		<location id="id87" x="-977" y="-416">
+		</location>
+		<location id="id88" x="-1096" y="-416">
+			<committed/>
+		</location>
+		<location id="id89" x="-1184" y="-416">
+		</location>
+		<location id="id90" x="-1296" y="-416">
+		</location>
+		<init ref="id90"/>
+		<transition>
+			<source ref="id82"/>
+			<target ref="id86"/>
+			<label kind="synchronisation" x="-517" y="-476">VP?</label>
+			<nail x="-535" y="-459"/>
+			<nail x="-459" y="-459"/>
+		</transition>
+		<transition>
+			<source ref="id82"/>
+			<target ref="id86"/>
+			<label kind="synchronisation" x="-543" y="-433">VS?</label>
+		</transition>
+		<transition>
+			<source ref="id83"/>
+			<target ref="id82"/>
+			<label kind="synchronisation" x="-653" y="-433">Vget!</label>
+		</transition>
+		<transition>
+			<source ref="id84"/>
+			<target ref="id83"/>
+			<label kind="synchronisation" x="-684" y="-454">AP?</label>
+			<nail x="-765" y="-433"/>
+			<nail x="-756" y="-459"/>
+			<nail x="-697" y="-459"/>
+		</transition>
+		<transition>
+			<source ref="id84"/>
+			<target ref="id83"/>
+			<label kind="synchronisation" x="-747" y="-433">AS?</label>
+		</transition>
+		<transition>
+			<source ref="id87"/>
+			<target ref="id85"/>
+			<label kind="synchronisation" x="-951" y="-476">VP?</label>
+			<nail x="-969" y="-459"/>
+			<nail x="-884" y="-459"/>
+		</transition>
+		<transition>
+			<source ref="id86"/>
+			<target ref="id90"/>
+			<label kind="synchronisation" x="-1278" y="-305">testOver!</label>
+			<nail x="-424" y="-288"/>
+			<nail x="-1296" y="-288"/>
+		</transition>
+		<transition>
+			<source ref="id85"/>
+			<target ref="id84"/>
+			<label kind="synchronisation" x="-840" y="-433">Aget!</label>
+		</transition>
+		<transition>
+			<source ref="id87"/>
+			<target ref="id85"/>
+			<label kind="synchronisation" x="-959" y="-433">VS?</label>
+		</transition>
+		<transition>
+			<source ref="id88"/>
+			<target ref="id87"/>
+			<label kind="synchronisation" x="-1062" y="-442">Vget!</label>
+			<label kind="assignment" x="-1054" y="-416">t:=0</label>
+		</transition>
+		<transition>
+			<source ref="id89"/>
+			<target ref="id88"/>
+			<label kind="synchronisation" x="-1156" y="-450">reset!</label>
+		</transition>
+		<transition>
+			<source ref="id90"/>
+			<target ref="id89"/>
+			<label kind="synchronisation" x="-1280" y="-440">testing?</label>
+		</transition>
+	</template>
+	<template>
+		<name>HMonitor_AVI</name>
+		<declaration>clock t;</declaration>
+		<location id="id91" x="-561" y="-153">
+		</location>
+		<location id="id92" x="-646" y="-153">
+			<committed/>
+		</location>
+		<location id="id93" x="-739" y="-153">
+		</location>
+		<location id="id94" x="-807" y="-153">
+			<committed/>
+		</location>
+		<location id="id95" x="-960" y="-152">
+		</location>
+		<location id="id96" x="-867" y="-153">
+		</location>
+		<location id="id97" x="-391" y="-153">
+			<name x="-401" y="-187">AVI</name>
+		</location>
+		<init ref="id95"/>
+		<transition>
+			<source ref="id91"/>
+			<target ref="id97"/>
+			<label kind="synchronisation" x="-517" y="-208">VP?</label>
+			<nail x="-535" y="-195"/>
+			<nail x="-450" y="-187"/>
+		</transition>
+		<transition>
+			<source ref="id91"/>
+			<target ref="id97"/>
+			<label kind="synchronisation" x="-543" y="-170">VS?</label>
+		</transition>
+		<transition>
+			<source ref="id92"/>
+			<target ref="id91"/>
+			<label kind="synchronisation" x="-611" y="-170">Vget!</label>
+			<nail x="-629" y="-153"/>
+		</transition>
+		<transition>
+			<source ref="id93"/>
+			<target ref="id92"/>
+			<label kind="synchronisation" x="-710" y="-192">AP?</label>
+			<nail x="-739" y="-170"/>
+			<nail x="-722" y="-187"/>
+			<nail x="-663" y="-187"/>
+		</transition>
+		<transition>
+			<source ref="id93"/>
+			<target ref="id92"/>
+			<label kind="synchronisation" x="-721" y="-170">AS?</label>
+		</transition>
+		<transition>
+			<source ref="id94"/>
+			<target ref="id93"/>
+			<label kind="synchronisation" x="-789" y="-170">Aget!</label>
+			<label kind="assignment" x="-789" y="-153">t:=0</label>
+		</transition>
+		<transition>
+			<source ref="id96"/>
+			<target ref="id94"/>
+			<label kind="synchronisation" x="-858" y="-178">reset?</label>
+		</transition>
+		<transition>
+			<source ref="id97"/>
+			<target ref="id95"/>
+			<label kind="synchronisation" x="-942" y="-73">testOver!</label>
+			<nail x="-391" y="-51"/>
+			<nail x="-960" y="-56"/>
+		</transition>
+		<transition>
+			<source ref="id95"/>
+			<target ref="id96"/>
+			<label kind="synchronisation" x="-943" y="-178">testing?</label>
+		</transition>
+	</template>
+	<template>
+		<name>HMonitor_PVARP</name>
+		<declaration>clock t;</declaration>
+		<location id="id98" x="-2320" y="-1020">
+		</location>
+		<location id="id99" x="-2184" y="-1020">
+			<name x="-2194" y="-1054">PVARP</name>
+			<committed/>
+		</location>
+		<location id="id100" x="-2414" y="-1020">
+			<committed/>
+		</location>
+		<location id="id101" x="-2490" y="-1020">
+		</location>
+		<location id="id102" x="-2601" y="-1020">
+			<committed/>
+		</location>
+		<location id="id103" x="-2737" y="-1020">
+		</location>
+		<location id="id104" x="-2832" y="-1016">
+		</location>
+		<init ref="id104"/>
+		<transition>
+			<source ref="id98"/>
+			<target ref="id99"/>
+			<label kind="synchronisation" x="-2277" y="-1075">AS?</label>
+			<nail x="-2312" y="-1037"/>
+			<nail x="-2295" y="-1062"/>
+			<nail x="-2227" y="-1054"/>
+		</transition>
+		<transition>
+			<source ref="id98"/>
+			<target ref="id99"/>
+			<label kind="synchronisation" x="-2277" y="-1037">AP?</label>
+			<nail x="-2295" y="-1020"/>
+		</transition>
+		<transition>
+			<source ref="id100"/>
+			<target ref="id98"/>
+			<label kind="synchronisation" x="-2379" y="-1037">Aget!</label>
+			<nail x="-2397" y="-1020"/>
+		</transition>
+		<transition>
+			<source ref="id101"/>
+			<target ref="id100"/>
+			<label kind="synchronisation" x="-2461" y="-1059">VS?</label>
+			<nail x="-2490" y="-1037"/>
+			<nail x="-2473" y="-1054"/>
+			<nail x="-2431" y="-1054"/>
+		</transition>
+		<transition>
+			<source ref="id99"/>
+			<target ref="id104"/>
+			<label kind="synchronisation" x="-2913" y="-918">testOver!</label>
+			<nail x="-2091" y="-901"/>
+			<nail x="-2931" y="-901"/>
+		</transition>
+		<transition>
+			<source ref="id101"/>
+			<target ref="id100"/>
+			<label kind="synchronisation" x="-2472" y="-1037">VP?</label>
+		</transition>
+		<transition>
+			<source ref="id102"/>
+			<target ref="id101"/>
+			<label kind="synchronisation" x="-2567" y="-1037">Vget!</label>
+			<label kind="assignment" x="-2558" y="-1020">t:=0</label>
+		</transition>
+		<transition>
+			<source ref="id103"/>
+			<target ref="id102"/>
+			<label kind="synchronisation" x="-2686" y="-1037">reset!</label>
+		</transition>
+		<transition>
+			<source ref="id104"/>
+			<target ref="id103"/>
+			<label kind="synchronisation" x="-2816" y="-1040">testing?</label>
+		</transition>
+	</template>
+	<template>
+		<name>CalcHeartRate</name>
+		<declaration>clock t;
+//int beats=0;
+
+void update_PAV()
+{
+	int i=1;
+	if(beats_1[1] &gt; beats_1[0])
+	{
+		PAV=PAV-4;
+	}
+	else
+	{
+		PAV=PAV+4;
+	}
+	if (PAV &lt; PAV_min)
+	{
+		PAV=PAV_min;
+	}
+	if (PAV &gt; PAV_max)
+	{
+		PAV=PAV_max;
+	}
+}</declaration>
+		<location id="id105" x="178" y="-153">
+			<name x="195" y="-161">Display</name>
+			<committed/>
+		</location>
+		<location id="id106" x="178" y="0">
+			<committed/>
+		</location>
+		<location id="id107" x="0" y="0">
+		</location>
+		<init ref="id107"/>
+		<transition>
+			<source ref="id105"/>
+			<target ref="id107"/>
+			<label kind="assignment" x="18" y="-153">t:=0,
+HeartRate:=beats_1[0],
+beats_1[0]:=0</label>
+			<nail x="0" y="-153"/>
+		</transition>
+		<transition>
+			<source ref="id106"/>
+			<target ref="id105"/>
+			<label kind="guard" x="178" y="-110">t&gt;=displayPacemakerInt</label>
+		</transition>
+		<transition>
+			<source ref="id106"/>
+			<target ref="id107"/>
+			<label kind="guard" x="17" y="144">t&lt;displayPacemakerInt</label>
+			<nail x="178" y="136"/>
+			<nail x="0" y="136"/>
+		</transition>
+		<transition>
+			<source ref="id107"/>
+			<target ref="id106"/>
+			<label kind="synchronisation" x="76" y="-43">Vget?</label>
+			<label kind="assignment" x="-32" y="16">beats_1[0]:=beats_1[0]+6</label>
+		</transition>
+	</template>
+	<template>
+		<name>Alarm</name>
+		<location id="id108" x="-1504" y="-1291">
+			<name x="-1521" y="-1275">HighAlarm</name>
+		</location>
+		<location id="id109" x="-1504" y="-1495">
+			<name x="-1514" y="-1529">LowAlarm</name>
+		</location>
+		<location id="id110" x="-1615" y="-1385">
+		</location>
+		<init ref="id110"/>
+		<transition>
+			<source ref="id108"/>
+			<target ref="id110"/>
+			<label kind="guard" x="-1844" y="-1309">PacemakerRate&lt;=HeartRateUpper[md]</label>
+			<nail x="-1589" y="-1308"/>
+		</transition>
+		<transition>
+			<source ref="id109"/>
+			<target ref="id110"/>
+			<label kind="guard" x="-1853" y="-1462">PacemakerRate&gt;=HeartRateLower[md]</label>
+			<nail x="-1598" y="-1461"/>
+		</transition>
+		<transition>
+			<source ref="id110"/>
+			<target ref="id108"/>
+			<label kind="guard" x="-1564" y="-1360">PacemakerRate&gt;HeartRateUpper[md]</label>
+		</transition>
+		<transition>
+			<source ref="id110"/>
+			<target ref="id109"/>
+			<label kind="guard" x="-1564" y="-1436">PacemakerRate!=0 &amp;&amp; PacemakerRate&lt;HeartRateLower[md]</label>
+		</transition>
+	</template>
+	<template>
+		<name>AV_Delay_calculation</name>
+		<declaration>int a=0;
+int b=0;
+void increase_PAV()
+{
+    PAV=PAV+4;
+	if (PAV &gt; PAV_max)
+	{
+		PAV=PAV_max;
+	}
+    //b=a;
+}
+void decrease_PAV()
+{
+    PAV=PAV-4;
+    if (PAV &lt; PAV_min)
+	{
+		PAV=PAV_min;
+	}
+    //b=a;
+}</declaration>
+		<location id="id111" x="110" y="-153">
+			<committed/>
+		</location>
+		<location id="id112" x="289" y="-25">
+			<committed/>
+		</location>
+		<location id="id113" x="152" y="176">
+			<name x="142" y="142">AVD2</name>
+			<committed/>
+		</location>
+		<location id="id114" x="-48" y="176">
+			<name x="-58" y="142">AVD1</name>
+		</location>
+		<location id="id115" x="0" y="0">
+			<name x="-10" y="-34">AVDelayInit</name>
+		</location>
+		<init ref="id115"/>
+		<transition>
+			<source ref="id111"/>
+			<target ref="id115"/>
+			<label kind="assignment" x="18" y="-76">b:=a</label>
+		</transition>
+		<transition>
+			<source ref="id112"/>
+			<target ref="id111"/>
+			<label kind="guard" x="221" y="-195">b&gt;=a</label>
+			<label kind="assignment" x="187" y="-170">increase_PAV()</label>
+			<nail x="297" y="-178"/>
+		</transition>
+		<transition>
+			<source ref="id112"/>
+			<target ref="id111"/>
+			<label kind="guard" x="136" y="-110">b&lt;a</label>
+			<label kind="assignment" x="128" y="-89">decrease_PAV()</label>
+		</transition>
+		<transition>
+			<source ref="id113"/>
+			<target ref="id112"/>
+			<label kind="assignment" x="212" y="93">a:=time-a</label>
+		</transition>
+		<transition>
+			<source ref="id114"/>
+			<target ref="id115"/>
+			<label kind="synchronisation" x="-186" y="105">reset?</label>
+			<label kind="assignment" x="-186" y="122">PAV:=40</label>
+			<nail x="-204" y="68"/>
+		</transition>
+		<transition>
+			<source ref="id114"/>
+			<target ref="id113"/>
+			<label kind="synchronisation" x="56" y="224">VS?</label>
+			<nail x="64" y="224"/>
+		</transition>
+		<transition>
+			<source ref="id114"/>
+			<target ref="id113"/>
+			<label kind="synchronisation" x="48" y="160">VP?</label>
+			<nail x="64" y="152"/>
+			<nail x="64" y="152"/>
+		</transition>
+		<transition>
+			<source ref="id115"/>
+			<target ref="id114"/>
+			<label kind="synchronisation" x="8" y="88">AP?</label>
+			<label kind="assignment" x="17" y="51">a:=time</label>
+			<nail x="16" y="88"/>
+		</transition>
+		<transition>
+			<source ref="id115"/>
+			<target ref="id114"/>
+			<label kind="synchronisation" x="-56" y="88">AS?</label>
+			<label kind="assignment" x="-68" y="59">a:=time</label>
+		</transition>
+	</template>
+	<template>
+		<name>Sensed_AV_Delay_offset</name>
+		<declaration>int old_PAV;
+void decrease_PAV()
+{
+	old_PAV=PAV;
+    PAV=PAV-4;
+	if (PAV &lt; PAV_min)
+	{
+		PAV=PAV_min;
+	}
+	if (PAV &gt; PAV_max)
+	{
+		PAV=PAV_max;
+	}
+}</declaration>
+		<location id="id116" x="-25" y="136">
+			<name x="-35" y="102">test</name>
+			<committed/>
+		</location>
+		<location id="id117" x="0" y="0">
+			<name x="-10" y="-34">SensedAVDInit</name>
+		</location>
+		<init ref="id117"/>
+		<transition>
+			<source ref="id116"/>
+			<target ref="id117"/>
+			<nail x="76" y="76"/>
+		</transition>
+		<transition>
+			<source ref="id117"/>
+			<target ref="id116"/>
+			<label kind="synchronisation" x="-42" y="34">AS?</label>
+			<label kind="assignment" x="-119" y="59">decrease_PAV()</label>
+		</transition>
+		<transition>
+			<source ref="id117"/>
+			<target ref="id117"/>
+			<label kind="synchronisation" x="-143" y="-72">reset?</label>
+			<label kind="assignment" x="-143" y="-55">PAV:=40</label>
+			<nail x="-161" y="-110"/>
+			<nail x="85" y="-119"/>
+		</transition>
+	</template>
+	<template>
+		<name>Ex_PVARP</name>
+		<declaration>clock t;
+int l= 100;
+int u=500;
+
+void extend_PVARP()
+{
+	TPVARP_l=l+20;
+}
+
+void restore_PVARP()
+{
+    TPVARP_l=l;
+}</declaration>
+		<location id="id118" x="59" y="-306">
+			<name x="49" y="-340">test</name>
+			<committed/>
+		</location>
+		<location id="id119" x="153" y="0">
+			<name x="143" y="-34">Exp3</name>
+		</location>
+		<location id="id120" x="119" y="153">
+			<name x="109" y="119">Exp2</name>
+			<committed/>
+		</location>
+		<location id="id121" x="-110" y="153">
+			<name x="-120" y="119">Exp1</name>
+		</location>
+		<location id="id122" x="0" y="0">
+			<name x="-10" y="-34">ExPVARPInit</name>
+		</location>
+		<init ref="id122"/>
+		<transition>
+			<source ref="id118"/>
+			<target ref="id122"/>
+			<nail x="-85" y="-263"/>
+		</transition>
+		<transition>
+			<source ref="id119"/>
+			<target ref="id118"/>
+			<label kind="synchronisation" x="25" y="-153">VP?</label>
+			<label kind="assignment" x="0" y="-136">restore_PVARP()</label>
+			<nail x="25" y="-161"/>
+		</transition>
+		<transition>
+			<source ref="id119"/>
+			<target ref="id118"/>
+			<label kind="synchronisation" x="77" y="-170">VS?</label>
+			<label kind="assignment" x="77" y="-153">restore_PVARP()</label>
+		</transition>
+		<transition>
+			<source ref="id119"/>
+			<target ref="id118"/>
+			<label kind="synchronisation" x="187" y="-195">AP?</label>
+			<label kind="assignment" x="178" y="-187">restore_PVARP()</label>
+			<nail x="195" y="-144"/>
+		</transition>
+		<transition>
+			<source ref="id119"/>
+			<target ref="id118"/>
+			<label kind="synchronisation" x="357" y="-212">AS?</label>
+			<label kind="assignment" x="331" y="-170">restore_PVARP()</label>
+			<nail x="348" y="-212"/>
+		</transition>
+		<transition>
+			<source ref="id119"/>
+			<target ref="id122"/>
+			<label kind="synchronisation" x="42" y="-68">reset?</label>
+			<label kind="assignment" x="8" y="-51">restore_PVARP()</label>
+			<nail x="93" y="-42"/>
+			<nail x="59" y="-68"/>
+		</transition>
+		<transition>
+			<source ref="id121"/>
+			<target ref="id122"/>
+			<label kind="synchronisation" x="-279" y="21">reset?</label>
+			<nail x="-297" y="-76"/>
+		</transition>
+		<transition>
+			<source ref="id120"/>
+			<target ref="id119"/>
+			<label kind="synchronisation" x="144" y="68">ex_PVARP!</label>
+		</transition>
+		<transition>
+			<source ref="id121"/>
+			<target ref="id122"/>
+			<label kind="guard" x="-135" y="-38">t&gt;=TAVI_l</label>
+			<nail x="-144" y="0"/>
+		</transition>
+		<transition>
+			<source ref="id121"/>
+			<target ref="id120"/>
+			<label kind="synchronisation" x="-25" y="153">VS?</label>
+			<label kind="assignment" x="-42" y="136">extend_PVARP()</label>
+		</transition>
+		<transition>
+			<source ref="id122"/>
+			<target ref="id121"/>
+			<label kind="synchronisation" x="0" y="59">AS?</label>
+			<label kind="assignment" x="0" y="76">t:=0</label>
+			<nail x="-8" y="102"/>
+		</transition>
+		<transition>
+			<source ref="id122"/>
+			<target ref="id121"/>
+			<label kind="synchronisation" x="-92" y="59">AP?</label>
+			<label kind="assignment" x="-92" y="76">t:=0</label>
+		</transition>
+	</template>
+	<template>
+		<name>Timer</name>
+		<declaration>clock t;</declaration>
+		<location id="id123" x="0" y="0">
+			<label kind="invariant" x="-10" y="17">t&lt;200</label>
+		</location>
+		<init ref="id123"/>
+		<transition>
+			<source ref="id123"/>
+			<target ref="id123"/>
+			<label kind="assignment" x="18" y="127">time=time+1,t:=0</label>
+			<nail x="0" y="127"/>
+			<nail x="161" y="127"/>
+		</transition>
+	</template>
+	<template>
+		<name>MonitorAVD</name>
+		<declaration>clock t;</declaration>
+		<location id="id124" x="416" y="17">
+			<name x="406" y="-17">test</name>
+			<label kind="invariant" x="406" y="34">t&lt;=50</label>
+		</location>
+		<location id="id125" x="229" y="8">
+		</location>
+		<location id="id126" x="0" y="0">
+		</location>
+		<init ref="id126"/>
+		<transition>
+			<source ref="id124"/>
+			<target ref="id126"/>
+			<nail x="408" y="-238"/>
+			<nail x="8" y="-238"/>
+		</transition>
+		<transition>
+			<source ref="id125"/>
+			<target ref="id124"/>
+			<label kind="guard" x="289" y="-8">t&gt;=4</label>
+		</transition>
+		<transition>
+			<source ref="id126"/>
+			<target ref="id125"/>
+			<label kind="synchronisation" x="110" y="59">VP?</label>
+			<label kind="assignment" x="18" y="51">t:=0</label>
+			<nail x="144" y="102"/>
+		</transition>
+	</template>
+	<template>
+		<name>MonitorEx_PVARP</name>
+		<declaration>clock t;</declaration>
+		<location id="id127" x="382" y="0">
+			<name x="372" y="-34">test</name>
+		</location>
+		<location id="id128" x="195" y="8">
+		</location>
+		<location id="id129" x="0" y="0">
+		</location>
+		<init ref="id129"/>
+		<transition>
+			<source ref="id128"/>
+			<target ref="id129"/>
+			<label kind="guard" x="51" y="-8">t&gt;=TAVI_l</label>
+		</transition>
+		<transition>
+			<source ref="id127"/>
+			<target ref="id129"/>
+			<label kind="synchronisation" x="272" y="221">VP?</label>
+			<nail x="459" y="238"/>
+			<nail x="-170" y="229"/>
+		</transition>
+		<transition>
+			<source ref="id127"/>
+			<target ref="id129"/>
+			<label kind="synchronisation" x="26" y="165">VS?</label>
+			<nail x="374" y="187"/>
+			<nail x="8" y="178"/>
+		</transition>
+		<transition>
+			<source ref="id127"/>
+			<target ref="id129"/>
+			<label kind="synchronisation" x="18" y="-348">AS?</label>
+			<nail x="348" y="-331"/>
+			<nail x="0" y="-331"/>
+		</transition>
+		<transition>
+			<source ref="id127"/>
+			<target ref="id129"/>
+			<label kind="synchronisation" x="239" y="-140">AP?</label>
+			<nail x="221" y="-246"/>
+		</transition>
+		<transition>
+			<source ref="id128"/>
+			<target ref="id127"/>
+			<label kind="synchronisation" x="263" y="-17">VS?</label>
+		</transition>
+		<transition>
+			<source ref="id129"/>
+			<target ref="id128"/>
+			<label kind="synchronisation" x="93" y="-68">AS?</label>
+			<label kind="assignment" x="18" y="-42">t:=0</label>
+			<nail x="102" y="-85"/>
+		</transition>
+		<transition>
+			<source ref="id129"/>
+			<target ref="id128"/>
+			<label kind="synchronisation" x="85" y="42">AP?</label>
+			<label kind="assignment" x="18" y="42">t:=0</label>
+			<nail x="110" y="85"/>
+		</transition>
+	</template>
+	<system>// Place template instantiations here.
+ProcessPaceA = PaceA();
+ProcessPaceV = PaceV();
+ProcessHeart = Heart1();
+ProcessHeart_pace = Heart_pace();
+ProcessLED_Pacemaker = LED_Pacemaker();
+ProcessLED_Heart = LED_Heart();
+ProcessKeyboard_Pace = Keyboard_Pacemaker();
+ProcessKeyboard_heart= Keyboard_heart();
+
+ProcMonitorLRI = Monitor_LRI();
+ProcMonitorURI = Monitor_URI();
+ProcMonitorPVARP = Monitor_PVARP();
+ProcMonitorPVRP = Monitor_VRP();
+ProcMonitorAVI = Monitor_AVI();
+
+ProcHMonitorLRI = HMonitor_LRI();
+ProcHMonitorURI = HMonitor_URI();
+ProcHMonitorPVARP = HMonitor_PVARP();
+ProcHMonitorPVRP = HMonitor_VRP();
+ProcHMonitorAVI = HMonitor_AVI();
+
+ProcessSense1 = Sense1();
+ProcessSense2 = Sense2();
+ProcessPmodes = Pacemaker_modes();
+ProcessAlarm = Alarm();
+ProcessHeartRate = CalcHeartRate();
+ProcessAV_Delay = AV_Delay_calculation();
+ProcessEx_PVARP = Ex_PVARP();
+ProcessSAVDO = Sensed_AV_Delay_offset();
+ProcessTimer = Timer();
+ProcessMonAVD = MonitorAVD();
+ProcessMonExPVARP = MonitorEx_PVARP();
+
+
+// List one or more processes to be composed into a system.
+
+//Always enable templates
+system ProcessPaceA,
+ProcessPaceV,
+
+ProcessHeart,
+ProcessHeart_pace,
+
+ProcessPmodes,
+ProcessSense1,
+ProcessSense2,
+
+ProcHMonitorLRI,
+ProcHMonitorURI,
+ProcHMonitorPVRP,
+ProcHMonitorAVI,
+ProcHMonitorPVARP,
+
+
+//Following templates are enabled as per requirement
+//ProcessLED_Pacemaker,
+//ProcessLED_Heart,
+
+//ProcessKeyboard_Pace, 
+//ProcessKeyboard_heart,
+
+//ProcMonitorLRI,
+//ProcMonitorURI,
+//ProcMonitorAVI,
+//ProcMonitorPVARP,
+//ProcMonitorPVRP,
+
+ProcessHeartRate,
+//ProcessAlarm,
+ProcessAV_Delay,
+ProcessEx_PVARP,
+ProcessSAVDO,
+ProcessTimer,
+ProcessMonAVD,
+ProcessMonExPVARP;
+</system>
+	<queries>
+		<query>
+			<formula>A[] (ProcessSAVDO.test &amp;&amp; PAV&gt;PAV_min ) imply ProcessSAVDO.old_PAV&gt;PAV
+			</formula>
+			<comment>
+			</comment>
+		</query>
+		<query>
+			<formula>A[] ProcessEx_PVARP.test imply TPVARP_l==100
+			</formula>
+			<comment>Query to test whether TPVARP gets restored to original value post TPVARP extension
+You should change the pacemaker mode to "md =0 " variable in declarations
+In the system declarations, templates to be disabled section, uncomment following templates :
+ProcessHeartRate,ProcessEx_PVARP,ProcessSAVDO,ProcessTimer,ProcessMonAVD,ProcessMonExPVARP,ProcessAV_Delay.
+			</comment>
+		</query>
+		<query>
+			<formula>A[] (ProcessEx_PVARP.Exp3 &amp;&amp; ProcessMonExPVARP.test) imply TPVARP_l==120
+			</formula>
+			<comment>Query to test whether TPVARP is extended after a Premature Ventricular Contraction
+You should change the pacemaker mode to "md =0 " variable in declarations
+In the system declarations, templates to be disabled section, uncomment following templates :
+ProcessHeartRate,ProcessEx_PVARP,ProcessSAVDO,ProcessTimer,ProcessMonAVD,ProcessMonExPVARP,ProcessAV_Delay.
+			</comment>
+		</query>
+		<query>
+			<formula>A[] (ProcessAV_Delay.AVDelayInit &amp;&amp; ProcessMonAVD.test) imply tpv &gt;=  PAV
+			</formula>
+			<comment>Query to test whether Dynamic AV Delay property is being adhered to. 
+You should change the pacemaker mode to "md =0 " variable in declarations
+In the system declarations, templates to be disabled section, uncomment following templates :
+ProcessHeartRate,ProcessEx_PVARP,ProcessSAVDO,ProcessTimer,ProcessMonAVD,ProcessMonExPVARP,ProcessAV_Delay.
+			</comment>
+		</query>
+		<query>
+			<formula>E&lt;&gt; ProcessHeart.TestMode
+			</formula>
+			<comment>Liveliness check for Testing Mode of Heart: Checks whether the heart enters Test mode
+In the system declarations, templates to be disabled section, uncomment following templates :
+ProcessLED_Pacemaker, ProcessKeyboard_heart, Alarm;
+			</comment>
+		</query>
+		<query>
+			<formula>E&lt;&gt; ProcessHeart.RandomMode
+			</formula>
+			<comment>Liveliness check for Random Mode of Heart: Checks whether the heart enters random mode
+In the system declarations, templates to be disabled section, uncomment following templates :
+ProcessLED_Pacemaker, ProcessKeyboard_heart, Alarm;
+			</comment>
+		</query>
+		<query>
+			<formula>E&lt;&gt; ProcessHeart.ManualMode
+			</formula>
+			<comment>Liveliness check for Manual Mode of Heart: Checks whether the heart enters manual mode
+In the system declarations, templates to be disabled section, uncomment following templates :
+ProcessLED_Pacemaker, ProcessKeyboard_heart, Alarm;
+			</comment>
+		</query>
+		<query>
+			<formula>E&lt;&gt; ProcessPmodes.V
+			</formula>
+			<comment>Liveliness check for Manual Mode of Pacemaker simulating a manual generation of VPace: Checks whether the Pacemaker enters Manual mode and simulates a VPace generation
+In the system declarations, templates to be disabled section, uncomment following templates :
+ProcessLED_Pacemaker, ProcessKeyboard_Pace, Alarm;
+			</comment>
+		</query>
+		<query>
+			<formula>E&lt;&gt; ProcessPmodes.A
+			</formula>
+			<comment>Liveliness check for Manual Mode of Pacemaker simulating a manual generation of APace: Checks whether the Pacemaker enters Manual mode and simulates a APace generation
+In the system declarations, templates to be disabled section, uncomment following templates :
+ProcessLED_Pacemaker, ProcessKeyboard_Pace, Alarm;
+			</comment>
+		</query>
+		<query>
+			<formula>E&lt;&gt; ProcessPmodes.Manual
+			</formula>
+			<comment>Liveliness check for Manual Mode of Pacemaker: Checks whether the Pacemaker enters Manual mode
+In the system declarations, templates to be disabled section, uncomment following templates :
+ProcessLED_Pacemaker, ProcessKeyboard_Pace, Alarm;
+			</comment>
+		</query>
+		<query>
+			<formula>E&lt;&gt; md==2
+			</formula>
+			<comment>Liveliness check for Exercise Mode of Pacemaker: Checks whether the Pacemaker enters Exercise mode
+In the system declarations, templates to be disabled section, uncomment following templates :
+ProcessLED_Pacemaker, ProcessKeyboard_Pace, Alarm;
+			</comment>
+		</query>
+		<query>
+			<formula>E&lt;&gt; md==1
+			</formula>
+			<comment>Liveliness check for Sleep Mode of Pacemaker: Checks whether the Pacemaker enters Sleep mode
+In the system declarations, templates to be disabled section, uncomment following templates :
+ProcessLED_Pacemaker, ProcessKeyboard_Pace, Alarm;
+			</comment>
+		</query>
+		<query>
+			<formula>E&lt;&gt; md==0
+			</formula>
+			<comment>Liveliness check for Normal Mode of Pacemaker: Checks whether the Pacemaker enters Normal mode
+In the system declarations, templates to be disabled section, uncomment following templates :
+ProcessLED_Pacemaker, ProcessKeyboard_Pace, Alarm;
+			</comment>
+		</query>
+		<query>
+			<formula>E&lt;&gt; ProcessLED_Heart.AGet
+			</formula>
+			<comment>Liveliness check for AGet LED of heart: Checks whether the heart enables AGet LED
+In the system declarations, templates to be disabled section, uncomment following templates :
+ProcessLED_Heart, ProcessKeyboard_heart, Alarm;
+			</comment>
+		</query>
+		<query>
+			<formula>E&lt;&gt; ProcessLED_Heart.VGet
+			</formula>
+			<comment>Liveliness check for VGet LED of heart: Checks whether the heart enables VGet LED
+In the system declarations, templates to be disabled section, uncomment following templates :
+ProcessLED_Heart, ProcessKeyboard_heart, Alarm;
+			</comment>
+		</query>
+		<query>
+			<formula>E&lt;&gt; ProcessLED_Heart.APace
+			</formula>
+			<comment>Liveliness check for APace LED of heart: Checks whether the heart enables APace LED
+In the system declarations, templates to be disabled section, uncomment following templates :
+ProcessLED_Heart, ProcessKeyboard_heart, Alarm;
+			</comment>
+		</query>
+		<query>
+			<formula>E&lt;&gt; ProcessLED_Heart.VPace
+			</formula>
+			<comment>Liveliness check for VPace LED of heart: Checks whether the heart enables VPace LED
+In the system declarations, templates to be disabled section, uncomment following templates :
+ProcessLED_Heart, ProcessKeyboard_heart, Alarm;
+			</comment>
+		</query>
+		<query>
+			<formula>E&lt;&gt; ProcessLED_Pacemaker.ASense
+			</formula>
+			<comment>Liveliness check for ASense LED of Pacemaker: Checks whether the heart enables ASense LED
+In the system declarations, templates to be disabled section, uncomment following templates :
+ProcessLED_Pacemaker, ProcessKeyboard_Pace, Alarm;
+			</comment>
+		</query>
+		<query>
+			<formula>E&lt;&gt; ProcessLED_Pacemaker.VSense
+			</formula>
+			<comment>Liveliness check for VSense LED of Pacemaker: Checks whether the heart enables VSense LED
+In the system declarations, templates to be disabled section, uncomment following templates :
+ProcessLED_Pacemaker, ProcessKeyboard_Pace, Alarm;
+			</comment>
+		</query>
+		<query>
+			<formula>E&lt;&gt; ProcessLED_Pacemaker.APace
+			</formula>
+			<comment>Liveliness check for APace LED of Pacemaker: Checks whether the heart enables APace LED
+In the system declarations, templates to be disabled section, uncomment following templates :
+ProcessLED_Pacemaker, ProcessKeyboard_Pace, Alarm;
+			</comment>
+		</query>
+		<query>
+			<formula>E&lt;&gt; ProcessLED_Pacemaker.VPace
+			</formula>
+			<comment>Liveliness check for VPace LED of Pacemaker: Checks whether the heart enables VPace LED
+In the system declarations, templates to be disabled section, uncomment following templates :
+ProcessLED_Pacemaker, ProcessKeyboard_Pace, Alarm;
+			</comment>
+		</query>
+		<query>
+			<formula>E&lt;&gt; ProcessHeartRate.Display
+			</formula>
+			<comment>Liveliness check for Display of Pacemaker: Checks whether the pacemaker Display is active
+In the system declarations, templates to be disabled section, uncomment following templates :
+ProcessLED_Heart, ProcessHeart_Pace, ProcessHeartRate, Alarm;
+			</comment>
+		</query>
+		<query>
+			<formula>E&lt;&gt; ProcMonitorLRI.Display
+			</formula>
+			<comment>Liveliness check for Display of Pacemaker: Checks whether the pacemaker Display is active
+In the system declarations, templates to be disabled section, uncomment following templates :
+ProcessLED_Pacemaker, ProcessKeyboard_Pace, ProcMonitorLRI, Alarm;
+			</comment>
+		</query>
+		<query>
+			<formula>E&lt;&gt; ProcessAlarm.HighAlarm
+			</formula>
+			<comment>Liveliness check for HighAlarm of Pacemaker: Checks whether the pacemaker High heartrate alarm is active
+In the system declarations, templates to be disabled section, uncomment following templates :
+ProcessLED_Pacemaker, ProcessKeyboard_Pace, ProcMonitorLRI, Alarm;
+This property will not be satisfied by default because the pacemaker performs within the expected range.
+			</comment>
+		</query>
+		<query>
+			<formula>E&lt;&gt; ProcessAlarm.LowAlarm
+			</formula>
+			<comment>Liveliness check for LowAlarm of Pacemaker: Checks whether the pacemaker Low heartrate alarm is active
+In the system declarations, templates to be disabled section, uncomment following templates :
+ProcessLED_Pacemaker, ProcessKeyboard_Pace, ProcMonitorLRI, Alarm;
+This property will not be satisfied by default because the pacemaker performs within the expected range.
+			</comment>
+		</query>
+		<query>
+			<formula>A[] ProcHMonitorPVARP.PVARP imply ProcHMonitorPVARP.t&gt;=TPVARP_l
+			</formula>
+			<comment>Testing Mode of Heart : Query checks the PVARP functionality by providing heart signals and checking time interval between consecutive VS/VP and AS/AP.
+You can change the pacemaker mode using "md" variable in declarations
+In the system declarations, templates to be disabled section, uncomment following templates :
+ProcessLED_Pacemaker, ProcessKeyboard_heart, Alarm;
+			</comment>
+		</query>
+		<query>
+			<formula>A[] ProcHMonitorAVI.AVI imply ProcHMonitorAVI.t&gt;=TAVI_l
+			</formula>
+			<comment>Testing Mode of Heart : Query checks the AVI functionality by providing heart signals and checking time interval between consecutive AS/AP and VS/VP.
+You can change the pacemaker mode using "md" variable in declarations
+In the system declarations, templates to be disabled section, uncomment following templates :
+ProcessLED_Pacemaker, ProcessKeyboard_heart, Alarm;
+			</comment>
+		</query>
+		<query>
+			<formula>A[] ProcHMonitorPVRP.VRP imply ProcHMonitorPVRP.t&gt;=TVRP_l
+			</formula>
+			<comment>Testing Mode of Heart : Query checks the VRP functionality by providing heart signals and checking consecutive VS/VP and time interval between them.
+You can change the pacemaker mode using "md" variable in declarations
+In the system declarations, templates to be disabled section, uncomment following templates :
+ProcessLED_Pacemaker, ProcessKeyboard_heart, Alarm;
+			</comment>
+		</query>
+		<query>
+			<formula>A[] ProcHMonitorURI.URI imply ProcHMonitorURI.t&gt;=TURI[md]
+			</formula>
+			<comment>Testing Mode of Heart : URI avoids pacing the heart too fast. Query checks if VP provided by pacemaker is always distant by URI interval after previous ventricular event.(VS,VP)
+You can change the pacemaker mode using "md" variable in declarations
+In the system declarations, templates to be disabled section, uncomment following templates :
+ProcessLED_Pacemaker, ProcessKeyboard_heart, Alarm;
+			</comment>
+		</query>
+		<query>
+			<formula>A[] ProcHMonitorLRI.LRI imply ProcHMonitorLRI.t&lt;=TLRI[md]-TAVI_u
+			</formula>
+			<comment>Testing Mode of Heart : Checking the functionality of LRI operation as per the definition : If no atrial event has been sensed (AS), the component will deliver atrial pacing (AP) after TLRI-TAVI.
+You can change the pacemaker mode using "md" variable in declarations
+In the system declarations, templates to be disabled section, uncomment following templates :
+ProcessLED_Pacemaker, ProcessKeyboard_heart, Alarm;
+			</comment>
+		</query>
+		<query>
+			<formula>A[] ProcMonitorAVI.three imply ProcMonitorAVI.t&gt;=TAVI_l
+			</formula>
+			<comment>Safety propert for mainitaing lower boud of AVI timing cycle: Checks whether the pacemaker always adhears to the lower limit of the AVI timing cycle
+In the system declarations, templates to be disabled section, uncomment following templates :
+ProcessLED_Pacemaker, ProcMonitorLRI, ProcMonitorURI, ProcMonitorAVI, ProcMonitorPVARP, ProcMonitorPVRP, Alarm;
+			</comment>
+		</query>
+		<query>
+			<formula>A[] ProcMonitorPVRP.three imply ProcMonitorPVRP.t&gt;=TVRP_l
+			</formula>
+			<comment>Safety propert for mainitaing lower boud of PVRP timing cycle: Checks whether the pacemaker always adhears to the lower limit of the PVRP timing cycle
+In the system declarations, templates to be disabled section, uncomment following templates :
+ProcessLED_Pacemaker, ProcMonitorLRI, ProcMonitorURI, ProcMonitorAVI, ProcMonitorPVARP, ProcMonitorPVRP, Alarm;
+			</comment>
+		</query>
+		<query>
+			<formula>A[] ProcMonitorPVARP.three imply ProcMonitorPVARP.t&gt;=TPVARP_l
+			</formula>
+			<comment>Safety propert for mainitaing lower boud of PVARP timing cycle: Checks whether the pacemaker always adhears to the lower limit of the PVARP timing cycle
+In the system declarations, templates to be disabled section, uncomment following templates :
+ProcessLED_Pacemaker, ProcMonitorLRI, ProcMonitorURI, ProcMonitorAVI, ProcMonitorPVARP, ProcMonitorPVRP, Alarm;
+			</comment>
+		</query>
+		<query>
+			<formula>A[] ProcMonitorURI.three imply ProcMonitorURI.t&gt;=TURI[2]
+			</formula>
+			<comment>Safety propert for mainitaing lower boud of URI timing cycle for exercise mode: Checks whether the pacemaker always adhears to the lower limit of the URI timing cycle in exercise mode
+You should change the pacemaker mode to "md = 2" variable in declarations
+In the system declarations, templates to be disabled section, uncomment following templates :
+ProcessLED_Pacemaker, ProcMonitorLRI, ProcMonitorURI, ProcMonitorAVI, ProcMonitorPVARP, ProcMonitorPVRP, Alarm;
+			</comment>
+		</query>
+		<query>
+			<formula>A[] ProcMonitorURI.three imply ProcMonitorURI.t&gt;=TURI[1]
+			</formula>
+			<comment>Safety propert for mainitaing lower boud of URI timing cycle for sleep mode: Checks whether the pacemaker always adhears to the lower limit of the URI timing cycle in sleep mode
+You should change the pacemaker mode to "md = 1" variable in declarations
+In the system declarations, templates to be disabled section, uncomment following templates :
+ProcessLED_Pacemaker, ProcMonitorLRI, ProcMonitorURI, ProcMonitorAVI, ProcMonitorPVARP, ProcMonitorPVRP, Alarm;
+			</comment>
+		</query>
+		<query>
+			<formula>A[] ProcMonitorURI.three imply ProcMonitorURI.t&gt;=TURI[0]
+			</formula>
+			<comment>Safety propert for mainitaing lower boud of URI timing cycle for normal mode: Checks whether the pacemaker always adhears to the lower limit of the URI timing cycle in normal mode
+You should change the pacemaker mode to "md = 0" variable in declarations
+In the system declarations, templates to be disabled section, uncomment following templates :
+ProcessLED_Pacemaker, ProcMonitorLRI, ProcMonitorURI, ProcMonitorAVI, ProcMonitorPVARP, ProcMonitorPVRP, Alarm;
+			</comment>
+		</query>
+		<query>
+			<formula>A[] ProcMonitorLRI.three imply ProcMonitorLRI.t&lt;=TLRI[2]
+			</formula>
+			<comment>Safety propert for mainitaing upper boud of LRI timing cycle for exercise mode: Checks whether the pacemaker always adhears to the upper limit of the LRI timing cycle in exercise mode
+You should change the pacemaker mode to "md =2 " variable in declarations
+In the system declarations, templates to be disabled section, uncomment following templates :
+ProcessLED_Pacemaker, ProcMonitorLRI, ProcMonitorURI, ProcMonitorAVI, ProcMonitorPVARP, ProcMonitorPVRP, Alarm;
+			</comment>
+		</query>
+		<query>
+			<formula>A[] ProcMonitorLRI.three imply ProcMonitorLRI.t&lt;=TLRI[1]
+			</formula>
+			<comment>Safety propert for mainitaing upper boud of LRI timing cycle for sleep mode: Checks whether the pacemaker always adhears to the upper limit of the LRI timing cycle in sleep mode
+You should change the pacemaker mode to "md =1 " variable in declarations
+In the system declarations, templates to be disabled section, uncomment following templates :
+ProcessLED_Pacemaker, ProcMonitorLRI, ProcMonitorURI, ProcMonitorAVI, ProcMonitorPVARP, ProcMonitorPVRP, Alarm;
+			</comment>
+		</query>
+		<query>
+			<formula>A[] ProcMonitorLRI.three imply ProcMonitorLRI.t&lt;=TLRI[0]
+			</formula>
+			<comment>Safety propert for mainitaing upper boud of LRI timing cycle for normal mode: Checks whether the pacemaker always adhears to the upper limit of the LRI timing cycle in normal mode
+You should change the pacemaker mode to "md =0 " variable in declarations
+In the system declarations, templates to be disabled section, uncomment following templates :
+ProcessLED_Pacemaker, ProcMonitorLRI, ProcMonitorURI, ProcMonitorAVI, ProcMonitorPVARP, ProcMonitorPVRP, Alarm;
+			</comment>
+		</query>
+		<query>
+			<formula>A[] not deadlock
+			</formula>
+			<comment>Safety property of the entire system
+In the system declarations, templates to be disabled section, uncomment following templates :
+ProcessKeyboard_Pace, ProcMonitorLRI, ProcMonitorURI, ProcMonitorAVI, ProcMonitorPVARP, ProcMonitorPVRP, Alarm,ProcessHeartRate,ProcessEx_PVARP,ProcessSAVDO,ProcessTimer,ProcessMonAVD,ProcessMonExPVARP,ProcessAV_Delay.
+			</comment>
+		</query>
+	</queries>
+</nta>
